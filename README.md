@@ -1,5 +1,7 @@
 # `github.com/laclance/go-sr`
 
+[![CI](https://github.com/laclance/go-sr/actions/workflows/ci.yml/badge.svg)](https://github.com/laclance/go-sr/actions/workflows/ci.yml)
+
 `go-sr` is a standalone Go module for deterministic support/resistance detection and SR-specific multi-timeframe helpers.
 
 ## Scope
@@ -55,6 +57,19 @@ func RequiredKlineLimit(baseInterval, targetInterval string, lookback int, mode 
 - `AggregateCandlesToTimeframe` uses UTC-aligned buckets and drops leading/trailing partial buckets.
 - `RequiredKlineLimit` returns the number of raw candles needed to build a higher-timeframe SR bundle and includes one extra live candle for exchange REST responses.
 - Supported interval strings use `<n><unit>` with `m`, `h`, or `d`, and the target interval must be larger than and evenly divisible by the base interval.
+
+## Quality Gate
+
+CI runs on every push and pull request. The gate requires:
+
+- `gofmt`
+- `go test ./...`
+- `go test -race ./...`
+- `go vet ./...`
+- `staticcheck ./...`
+- `golangci-lint run`
+- `100.0%` statement coverage
+- 5-second fuzz smoke tests for aggregation and compute invariants
 
 ## Install
 
