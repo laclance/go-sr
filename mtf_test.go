@@ -154,7 +154,7 @@ func TestAggregateCandlesToTimeframe_IgnoresDuplicateOpenTimes(t *testing.T) {
 	}{
 		{100, 101, 99, 100.5, 10},
 		{100.5, 102, 100, 101.5, 20},
-		{100.5, 102, 100, 101.5, 20},
+		{999, 999, 1, 999, 999},
 		{101.5, 103, 101, 102.5, 30},
 	})
 	candles[2].OpenTime = candles[1].OpenTime
@@ -250,6 +250,12 @@ func TestRequiredKlineLimit_ModeAware(t *testing.T) {
 	}
 	if got := RequiredKlineLimit("1h", "1d", 1, ModeZones); got != 457 {
 		t.Fatalf("zone 1h->1d required limit: got %d want 457", got)
+	}
+}
+
+func TestRequiredKlineLimit_SameTimeframeReturnsZero(t *testing.T) {
+	if got := RequiredKlineLimit("5m", "5m", 50, ModeZones); got != 0 {
+		t.Fatalf("same-timeframe required limit: got %d want 0", got)
 	}
 }
 

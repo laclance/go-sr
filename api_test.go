@@ -27,6 +27,37 @@ func TestCompute_ZoneShortInputReturnsEmptyLevels(t *testing.T) {
 	}
 }
 
+func TestCompute_ZoneLookbackZeroAtPivotBoundary(t *testing.T) {
+	closeTime := time.Date(2024, 4, 10, 0, 0, 0, 0, time.UTC)
+	short := Compute(makeFlatCandles(pivotWindow*2, 100.0, closeTime), Options{
+		Timeframe: "5m",
+		Lookback:  0,
+		Mode:      ModeZones,
+	})
+	if !reflect.DeepEqual(short, EmptyLevels("5m")) {
+		t.Fatalf("expected below pivot boundary to return empty bundle, got %+v", short)
+	}
+
+	atBoundary := makeFlatCandles(pivotWindow*2+1, 100.0, closeTime)
+	atBoundary[pivotWindow].High = 120
+	atBoundary[pivotWindow].Low = 80
+	got := Compute(atBoundary, Options{
+		Timeframe:   "5m",
+		Lookback:    0,
+		Mode:        ModeZones,
+		MinStrength: 1,
+	})
+	if len(got.RawZones) != 2 {
+		t.Fatalf("expected boundary input to scan the interior pivot, got %d raw zones: %+v", len(got.RawZones), got.RawZones)
+	}
+	if findZoneBySource(got.RawZones, []int{pivotWindow}, true) == nil {
+		t.Fatalf("expected high pivot at boundary index %d, got %+v", pivotWindow, got.RawZones)
+	}
+	if findZoneBySource(got.RawZones, []int{pivotWindow}, false) == nil {
+		t.Fatalf("expected low pivot at boundary index %d, got %+v", pivotWindow, got.RawZones)
+	}
+}
+
 func TestCompute_LegacyShortInputReturnsEmptyLevels(t *testing.T) {
 	candles := makeFlatCandles(10, 100.0, time.Date(2024, 4, 11, 0, 0, 0, 0, time.UTC))
 	got := computeLegacy(candles, "5m", 50, 0.002)
