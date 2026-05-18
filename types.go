@@ -114,6 +114,8 @@ type Options struct {
 	Timeframe string
 	Lookback  int
 	Mode      Mode
+	// Tolerance applies only to ModeLegacy. When Tolerance <= 0, legacy mode
+	// uses the default fallback of 0.002.
 	Tolerance float64
 	// MinStrength filters zone-mode raw zones by Strength.
 	// 0 or negative -> use the default of 2 (back-compat).

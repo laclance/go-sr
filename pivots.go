@@ -2,7 +2,8 @@ package sr
 
 import "time"
 
-// srPivot holds per-swing data captured at pivot confirmation time.
+// srPivot holds per-swing data captured at pivot confirmation time. Keep its
+// fields identical to PivotInfo; pivotInfo relies on direct conversion.
 type srPivot struct {
 	Index             int
 	ConfirmedAtIndex  int
