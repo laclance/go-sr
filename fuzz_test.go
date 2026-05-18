@@ -93,12 +93,15 @@ func FuzzComputeInvariants(f *testing.F) {
 		if useLegacy {
 			mode = ModeLegacy
 		}
-		levels := Compute(candles, Options{
+		levels, err := Compute(candles, Options{
 			Timeframe: "5m",
 			Lookback:  50,
 			Mode:      mode,
 			Tolerance: 0.002,
 		})
+		if err != nil {
+			t.Fatalf("unexpected Compute error: %v", err)
+		}
 
 		if len(levels.RawZones) < len(levels.Levels) {
 			t.Fatalf("raw zones smaller than qualified levels: raw=%d qualified=%d", len(levels.RawZones), len(levels.Levels))

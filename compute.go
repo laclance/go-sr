@@ -7,16 +7,21 @@ const (
 )
 
 // Compute detects support/resistance levels for the given candle prefix.
-func Compute(candles []Candle, opts Options) Levels {
-	switch normalizeMode(opts.Mode) {
+func Compute(candles []Candle, opts Options) (Levels, error) {
+	mode, err := normalizeMode(opts.Mode)
+	if err != nil {
+		return EmptyLevels(opts.Timeframe), err
+	}
+
+	switch mode {
 	case ModeZones:
-		return computeZones(candles, opts.Timeframe, opts.Lookback, opts.MinStrength)
+		return computeZones(candles, opts.Timeframe, opts.Lookback, opts.MinStrength), nil
 	default:
 		tolerance := opts.Tolerance
 		if tolerance <= 0 {
 			tolerance = 0.002
 		}
-		return computeSRLegacy(candles, opts.Timeframe, opts.Lookback, tolerance)
+		return computeSRLegacy(candles, opts.Timeframe, opts.Lookback, tolerance), nil
 	}
 }
 

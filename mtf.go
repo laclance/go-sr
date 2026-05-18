@@ -1,23 +1,25 @@
 package sr
 
 import (
+	"fmt"
 	"strconv"
 	"time"
 )
 
-func normalizeMode(mode Mode) Mode {
+func normalizeMode(mode Mode) (Mode, error) {
 	switch mode {
 	case "", ModeLegacy:
-		return ModeLegacy
+		return ModeLegacy, nil
 	case ModeZones:
-		return ModeZones
+		return ModeZones, nil
 	default:
-		panic("sr: unknown Mode " + strconv.Quote(string(mode)))
+		return "", fmt.Errorf("sr: unknown Mode %q", mode)
 	}
 }
 
 func pivotWindowForMode(mode Mode) int {
-	if normalizeMode(mode) == ModeZones {
+	normalized, err := normalizeMode(mode)
+	if err == nil && normalized == ModeZones {
 		return pivotWindow
 	}
 	return legacyPivotWindow

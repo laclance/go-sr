@@ -6,23 +6,31 @@ import (
 )
 
 func ExampleCompute_zone() {
-	levels := Compute(buildSRCategoryCandles(), Options{
+	levels, err := Compute(buildSRCategoryCandles(), Options{
 		Timeframe: "5m",
 		Lookback:  120,
 		Mode:      ModeZones,
 	})
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
 
 	fmt.Println(levels.Timeframe, len(levels.Levels) >= 2, levels.NearestSupport > 0, levels.NearestResistance > 0)
 	// Output: 5m true true true
 }
 
 func ExampleCompute_legacy() {
-	levels := Compute(buildSRCategoryCandles(), Options{
+	levels, err := Compute(buildSRCategoryCandles(), Options{
 		Timeframe: "5m",
 		Lookback:  120,
 		Mode:      ModeLegacy,
 		Tolerance: 0.002,
 	})
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
 
 	fmt.Println(levels.Timeframe, len(levels.Levels) >= 2, levels.NearestSupport > 0, levels.NearestResistance > 0)
 	// Output: 5m true true true

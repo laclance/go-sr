@@ -84,7 +84,7 @@ func TestBTCCSVRegressionSnapshots(t *testing.T) {
 
 	snapshots := []btcSnapshot{
 		func() btcSnapshot {
-			levels := Compute(prefix, Options{Timeframe: "5m", Lookback: 50, Mode: ModeZones})
+			levels := mustCompute(prefix, Options{Timeframe: "5m", Lookback: 50, Mode: ModeZones})
 			return btcSnapshot{
 				name:      "5m_zone",
 				timeframe: "5m",
@@ -106,7 +106,7 @@ func TestBTCCSVRegressionSnapshots(t *testing.T) {
 		}(),
 		func() btcSnapshot {
 			agg := AggregateCandlesToTimeframe(prefix, "5m", "15m")
-			levels := Compute(agg, Options{Timeframe: "15m", Lookback: 50, Mode: ModeZones})
+			levels := mustCompute(agg, Options{Timeframe: "15m", Lookback: 50, Mode: ModeZones})
 			return btcSnapshot{
 				name:      "15m_zone",
 				timeframe: "15m",
@@ -128,7 +128,7 @@ func TestBTCCSVRegressionSnapshots(t *testing.T) {
 		}(),
 		func() btcSnapshot {
 			agg := AggregateCandlesToTimeframe(prefix, "5m", "1h")
-			levels := Compute(agg, Options{Timeframe: "1h", Lookback: 50, Mode: ModeZones})
+			levels := mustCompute(agg, Options{Timeframe: "1h", Lookback: 50, Mode: ModeZones})
 			return btcSnapshot{
 				name:      "1h_zone",
 				timeframe: "1h",
@@ -149,7 +149,7 @@ func TestBTCCSVRegressionSnapshots(t *testing.T) {
 			}
 		}(),
 		func() btcSnapshot {
-			levels := Compute(prefix, Options{Timeframe: "5m", Lookback: 50, Mode: ModeLegacy, Tolerance: 0.002})
+			levels := mustCompute(prefix, Options{Timeframe: "5m", Lookback: 50, Mode: ModeLegacy, Tolerance: 0.002})
 			return btcSnapshot{
 				name:      "5m_legacy",
 				timeframe: "5m",

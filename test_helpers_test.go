@@ -8,7 +8,7 @@ import (
 )
 
 func computeZone(candles []Candle, timeframe string, lookback int) Levels {
-	return Compute(candles, Options{
+	return mustCompute(candles, Options{
 		Timeframe: timeframe,
 		Lookback:  lookback,
 		Mode:      ModeZones,
@@ -16,12 +16,20 @@ func computeZone(candles []Candle, timeframe string, lookback int) Levels {
 }
 
 func computeLegacy(candles []Candle, timeframe string, lookback int, tolerance float64) Levels {
-	return Compute(candles, Options{
+	return mustCompute(candles, Options{
 		Timeframe: timeframe,
 		Lookback:  lookback,
 		Mode:      ModeLegacy,
 		Tolerance: tolerance,
 	})
+}
+
+func mustCompute(candles []Candle, opts Options) Levels {
+	levels, err := Compute(candles, opts)
+	if err != nil {
+		panic(err)
+	}
+	return levels
 }
 
 func make5mCandles(start time.Time, values []struct {

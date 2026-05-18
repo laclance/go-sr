@@ -29,11 +29,14 @@ func TestCompute_ZoneShortInputReturnsEmptyLevels(t *testing.T) {
 
 func TestCompute_ZoneLookbackZeroAtPivotBoundary(t *testing.T) {
 	closeTime := time.Date(2024, 4, 10, 0, 0, 0, 0, time.UTC)
-	short := Compute(makeFlatCandles(pivotWindow*2, 100.0, closeTime), Options{
+	short, err := Compute(makeFlatCandles(pivotWindow*2, 100.0, closeTime), Options{
 		Timeframe: "5m",
 		Lookback:  0,
 		Mode:      ModeZones,
 	})
+	if err != nil {
+		t.Fatalf("unexpected Compute error: %v", err)
+	}
 	if !reflect.DeepEqual(short, EmptyLevels("5m")) {
 		t.Fatalf("expected below pivot boundary to return empty bundle, got %+v", short)
 	}
@@ -41,12 +44,15 @@ func TestCompute_ZoneLookbackZeroAtPivotBoundary(t *testing.T) {
 	atBoundary := makeFlatCandles(pivotWindow*2+1, 100.0, closeTime)
 	atBoundary[pivotWindow].High = 120
 	atBoundary[pivotWindow].Low = 80
-	got := Compute(atBoundary, Options{
+	got, err := Compute(atBoundary, Options{
 		Timeframe:   "5m",
 		Lookback:    0,
 		Mode:        ModeZones,
 		MinStrength: 1,
 	})
+	if err != nil {
+		t.Fatalf("unexpected Compute error: %v", err)
+	}
 	if len(got.RawZones) != 2 {
 		t.Fatalf("expected boundary input to scan the interior pivot, got %d raw zones: %+v", len(got.RawZones), got.RawZones)
 	}
@@ -55,6 +61,22 @@ func TestCompute_ZoneLookbackZeroAtPivotBoundary(t *testing.T) {
 	}
 	if findZoneBySource(got.RawZones, []int{pivotWindow}, false) == nil {
 		t.Fatalf("expected low pivot at boundary index %d, got %+v", pivotWindow, got.RawZones)
+	}
+}
+
+func TestCompute_UnknownModeReturnsError(t *testing.T) {
+	got, err := Compute(makeFlatCandles(12, 100, time.Date(2024, 4, 20, 0, 0, 0, 0, time.UTC)), Options{
+		Timeframe: "5m",
+		Mode:      Mode("zones"),
+	})
+	if err == nil {
+		t.Fatal("expected error for unknown mode")
+	}
+	if err.Error() != `sr: unknown Mode "zones"` {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !reflect.DeepEqual(got, EmptyLevels("5m")) {
+		t.Fatalf("expected empty bundle on unknown mode, got %+v", got)
 	}
 }
 

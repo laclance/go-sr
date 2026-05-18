@@ -39,7 +39,7 @@ type Options struct {
     MinStrength int
 }
 
-func Compute(candles []Candle, opts Options) Levels
+func Compute(candles []Candle, opts Options) (Levels, error)
 func EmptyLevels(timeframe string) Levels
 func AggregateCandlesToTimeframe(candles []Candle, fromInterval, toInterval string) []Candle
 func WarmupCandles(lookback int, mode Mode) int
@@ -53,6 +53,7 @@ func RequiredKlineLimit(baseInterval, targetInterval string, lookback int, mode 
 ## Behavioral Contract
 
 - `Compute` is deterministic for the same candle prefix and options.
+- `Compute` returns an empty level bundle and an error for an unknown `Mode`.
 - Zone-mode pivots are confirmation-based; no future candles are read beyond the current prefix.
 - `AggregateCandlesToTimeframe` uses UTC-aligned buckets and drops leading/trailing partial buckets.
 - `RequiredKlineLimit` returns the number of raw candles needed to build a higher-timeframe SR bundle and includes one extra live candle for exchange REST responses.
@@ -85,18 +86,24 @@ go get github.com/laclance/go-sr
 ```go
 import sr "github.com/laclance/go-sr"
 
-levels := sr.Compute(candles, sr.Options{
+levels, err := sr.Compute(candles, sr.Options{
     Timeframe: "5m",
     Lookback:  50,
     Mode:      sr.ModeZones,
 })
+if err != nil {
+    return err
+}
 
 agg15m := sr.AggregateCandlesToTimeframe(candles, "5m", "15m")
-levels15m := sr.Compute(agg15m, sr.Options{
+levels15m, err := sr.Compute(agg15m, sr.Options{
     Timeframe: "15m",
     Lookback:  50,
     Mode:      sr.ModeZones,
 })
+if err != nil {
+    return err
+}
 ```
 
 See the runnable examples in `examples_test.go` for minimal workflows covering zone mode, legacy mode, and multi-timeframe aggregation.

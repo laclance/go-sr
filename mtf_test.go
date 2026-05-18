@@ -297,17 +297,25 @@ func TestNormalizeMode(t *testing.T) {
 		{ModeZones, ModeZones},
 	}
 	for _, tc := range cases {
-		if got := normalizeMode(tc.in); got != tc.want {
+		got, err := normalizeMode(tc.in)
+		if err != nil {
+			t.Fatalf("normalizeMode(%q) unexpected error: %v", tc.in, err)
+		}
+		if got != tc.want {
 			t.Fatalf("normalizeMode(%q) = %q, want %q", tc.in, got, tc.want)
 		}
 	}
 }
 
-func TestNormalizeMode_UnknownPanics(t *testing.T) {
-	defer func() {
-		if r := recover(); r == nil {
-			t.Fatal("expected panic for unknown mode")
-		}
-	}()
-	normalizeMode(Mode("zones"))
+func TestNormalizeMode_UnknownReturnsError(t *testing.T) {
+	got, err := normalizeMode(Mode("zones"))
+	if err == nil {
+		t.Fatal("expected error for unknown mode")
+	}
+	if got != "" {
+		t.Fatalf("expected zero mode on error, got %q", got)
+	}
+	if err.Error() != `sr: unknown Mode "zones"` {
+		t.Fatalf("unexpected error: %v", err)
+	}
 }
