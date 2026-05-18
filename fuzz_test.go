@@ -61,33 +61,7 @@ func FuzzComputeInvariants(f *testing.F) {
 		}
 		count = count%320 + 1
 
-		candles := make([]Candle, count)
-		start := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
-		price := 50000.0
-		for i := range candles {
-			phase := float64((int64(i)+phaseSeed)%31) / 5
-			price += math.Sin(phase)*15 + float64((i%5)-2)*6
-			if price < 100 {
-				price = 100
-			}
-
-			open := price - 10
-			closePrice := price + 10
-			if i%2 == 1 {
-				open, closePrice = closePrice, open
-			}
-
-			openTime := start.Add(time.Duration(i) * 5 * time.Minute)
-			candles[i] = Candle{
-				OpenTime:  openTime,
-				CloseTime: openTime.Add(5 * time.Minute),
-				Open:      open,
-				High:      math.Max(open, closePrice) + 5,
-				Low:       math.Min(open, closePrice) - 5,
-				Close:     closePrice,
-				Volume:    100 + float64(i%9),
-			}
-		}
+		candles := fuzzComputeCandles(count, phaseSeed)
 
 		mode := ModeZones
 		if useLegacy {
@@ -118,4 +92,56 @@ func FuzzComputeInvariants(f *testing.F) {
 			t.Fatalf("nearest resistance below price: resistance=%.2f close=%.2f", levels.NearestResistance, closePrice)
 		}
 	})
+}
+
+func TestCompute_FuzzRegression_NearestResistanceNotBelowClose(t *testing.T) {
+	candles := fuzzComputeCandles(184, 19)
+	levels, err := Compute(candles, Options{
+		Timeframe: "5m",
+		Lookback:  50,
+		Mode:      ModeZones,
+		Tolerance: 0.002,
+	})
+	if err != nil {
+		t.Fatalf("unexpected Compute error: %v", err)
+	}
+
+	closePrice := candles[len(candles)-1].Close
+	if levels.NearestSupport != 0 && levels.NearestSupport > closePrice {
+		t.Fatalf("nearest support above price: support=%.2f close=%.2f", levels.NearestSupport, closePrice)
+	}
+	if levels.NearestResistance != 0 && levels.NearestResistance < closePrice {
+		t.Fatalf("nearest resistance below price: resistance=%.2f close=%.2f", levels.NearestResistance, closePrice)
+	}
+}
+
+func fuzzComputeCandles(count int, phaseSeed int64) []Candle {
+	candles := make([]Candle, count)
+	start := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
+	price := 50000.0
+	for i := range candles {
+		phase := float64((int64(i)+phaseSeed)%31) / 5
+		price += math.Sin(phase)*15 + float64((i%5)-2)*6
+		if price < 100 {
+			price = 100
+		}
+
+		open := price - 10
+		closePrice := price + 10
+		if i%2 == 1 {
+			open, closePrice = closePrice, open
+		}
+
+		openTime := start.Add(time.Duration(i) * 5 * time.Minute)
+		candles[i] = Candle{
+			OpenTime:  openTime,
+			CloseTime: openTime.Add(5 * time.Minute),
+			Open:      open,
+			High:      math.Max(open, closePrice) + 5,
+			Low:       math.Min(open, closePrice) - 5,
+			Close:     closePrice,
+			Volume:    100 + float64(i%9),
+		}
+	}
+	return candles
 }

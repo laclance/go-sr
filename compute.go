@@ -120,8 +120,8 @@ func detectZoneProximity(zones []Level, price float64) (
 	var foundSupp, foundResi bool
 
 	for _, z := range zones {
-		supportSide := price >= z.Bottom
-		resistanceSide := price <= z.Top
+		supportSide := price >= z.Price
+		resistanceSide := price <= z.Price
 		if supportSide && resistanceSide {
 			if z.IsHigh {
 				supportSide = false
