@@ -6,10 +6,14 @@ import (
 )
 
 func normalizeMode(mode Mode) Mode {
-	if mode == ModeZones {
+	switch mode {
+	case "", ModeLegacy:
+		return ModeLegacy
+	case ModeZones:
 		return ModeZones
+	default:
+		panic("sr: unknown Mode " + strconv.Quote(string(mode)))
 	}
-	return ModeLegacy
 }
 
 func pivotWindowForMode(mode Mode) int {

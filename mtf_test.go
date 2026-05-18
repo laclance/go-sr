@@ -280,3 +280,28 @@ func TestIntervalDuration_UnknownUnitReturnsZero(t *testing.T) {
 		t.Fatalf("expected unknown interval unit to return zero, got %s", got)
 	}
 }
+
+func TestNormalizeMode(t *testing.T) {
+	cases := []struct {
+		in   Mode
+		want Mode
+	}{
+		{"", ModeLegacy},
+		{ModeLegacy, ModeLegacy},
+		{ModeZones, ModeZones},
+	}
+	for _, tc := range cases {
+		if got := normalizeMode(tc.in); got != tc.want {
+			t.Fatalf("normalizeMode(%q) = %q, want %q", tc.in, got, tc.want)
+		}
+	}
+}
+
+func TestNormalizeMode_UnknownPanics(t *testing.T) {
+	defer func() {
+		if r := recover(); r == nil {
+			t.Fatal("expected panic for unknown mode")
+		}
+	}()
+	normalizeMode(Mode("zones"))
+}
