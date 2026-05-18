@@ -37,12 +37,12 @@ func computeZones(candles []Candle, timeframe string, lookback int, minStrength 
 	rawHighZones := buildZones(highPivots, candles, lookback)
 	rawLowZones := buildZones(lowPivots, candles, lookback)
 
-	rawAll := append(cloneSRLevels(rawLowZones), cloneSRLevels(rawHighZones)...)
+	rawAll := appendSRLevels(rawLowZones, rawHighZones)
 	sortSRLevels(rawAll)
 
 	highZones := filterZones(rawHighZones, minStrength)
 	lowZones := filterZones(rawLowZones, minStrength)
-	all := append(cloneSRLevels(lowZones), cloneSRLevels(highZones)...)
+	all := appendSRLevels(lowZones, highZones)
 	sortSRLevels(all)
 
 	nearSup, nearRes, nearestSup, nearestRes, supDist, resDist, supStr, resStr, supScore, resScore :=
@@ -100,7 +100,7 @@ func newSRLookbackWindow(n, lookback int) srLookbackWindow {
 // detectZoneProximity determines if the current price is near any qualified
 // support/resistance zone. A zone counts as near when the close is within 2x
 // its half-width.
-func detectZoneProximity(zones []Level, close float64) (
+func detectZoneProximity(zones []Level, price float64) (
 	nearSup, nearRes bool,
 	nearestSup, nearestRes float64,
 	supDistance, resDistance float64,
@@ -110,15 +110,13 @@ func detectZoneProximity(zones []Level, close float64) (
 	nearestSupDist := math.MaxFloat64
 	nearestResDist := math.MaxFloat64
 
-	type best struct {
-		zone Level
-		dist float64
-	}
-	var bestSupp, bestResi *best
+	var bestSupp, bestResi Level
+	var bestSuppDist, bestResiDist float64
+	var foundSupp, foundResi bool
 
 	for _, z := range zones {
-		supportSide := close >= z.Bottom
-		resistanceSide := close <= z.Top
+		supportSide := price >= z.Bottom
+		resistanceSide := price <= z.Top
 		if supportSide && resistanceSide {
 			if z.IsHigh {
 				supportSide = false
@@ -128,48 +126,52 @@ func detectZoneProximity(zones []Level, close float64) (
 		}
 
 		if supportSide {
-			dist := math.Max(0, close-z.Price)
+			dist := math.Max(0, price-z.Price)
 			if dist < nearestSupDist {
 				nearestSupDist = dist
-				bestSupp = &best{zone: z, dist: dist}
+				bestSupp = z
+				bestSuppDist = dist
+				foundSupp = true
 			}
 		}
 
 		if resistanceSide {
-			dist := math.Max(0, z.Price-close)
+			dist := math.Max(0, z.Price-price)
 			if dist < nearestResDist {
 				nearestResDist = dist
-				bestResi = &best{zone: z, dist: dist}
+				bestResi = z
+				bestResiDist = dist
+				foundResi = true
 			}
 		}
 	}
 
-	if bestSupp != nil {
-		z := bestSupp.zone
+	if foundSupp {
+		z := bestSupp
 		nearestSup = z.Price
-		supDistance = bestSupp.dist
+		supDistance = bestSuppDist
 		supStrength = z.Strength
 		supScore = z.Score
 		zoneRadius := (z.Top - z.Bottom) / 2
 		if zoneRadius <= 0 {
-			zoneRadius = close * 0.001
+			zoneRadius = price * 0.001
 		}
-		if bestSupp.dist <= zoneRadius*2 {
+		if bestSuppDist <= zoneRadius*2 {
 			nearSup = true
 		}
 	}
 
-	if bestResi != nil {
-		z := bestResi.zone
+	if foundResi {
+		z := bestResi
 		nearestRes = z.Price
-		resDistance = bestResi.dist
+		resDistance = bestResiDist
 		resStrength = z.Strength
 		resScore = z.Score
 		zoneRadius := (z.Top - z.Bottom) / 2
 		if zoneRadius <= 0 {
-			zoneRadius = close * 0.001
+			zoneRadius = price * 0.001
 		}
-		if bestResi.dist <= zoneRadius*2 {
+		if bestResiDist <= zoneRadius*2 {
 			nearRes = true
 		}
 	}

@@ -250,6 +250,13 @@ func cloneSRLevels(levels []Level) []Level {
 	return cloned
 }
 
+func appendSRLevels(a, b []Level) []Level {
+	levels := make([]Level, 0, len(a)+len(b))
+	levels = append(levels, a...)
+	levels = append(levels, b...)
+	return levels
+}
+
 func cloneSRLevel(level Level) Level {
 	cloned := level
 	cloned.SourcePivotIndexes = append([]int(nil), level.SourcePivotIndexes...)

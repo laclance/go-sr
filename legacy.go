@@ -22,8 +22,8 @@ func computeSRLegacy(candles []Candle, timeframe string, lookback int, tolerance
 		return EmptyLevels(timeframe)
 	}
 
-	close := candles[n-1].Close
-	tolAbs := close * tolerance
+	lastClose := candles[n-1].Close
+	tolAbs := lastClose * tolerance
 
 	var highs, lows []float64
 	for i := start; i < end; i++ {
@@ -41,7 +41,7 @@ func computeSRLegacy(candles []Candle, timeframe string, lookback int, tolerance
 
 	rawZones := cloneSRLevels(levels)
 
-	nearSup, nearRes, nearestSup, nearestRes, supDist, resDist, supStr, resStr := legacyProximity(levels, close, tolAbs)
+	nearSup, nearRes, nearestSup, nearestRes, supDist, resDist, supStr, resStr := legacyProximity(levels, lastClose, tolAbs)
 
 	return Levels{
 		Timeframe:                 timeframe,
@@ -125,7 +125,7 @@ func clusterLevels(prices []float64, isHigh bool, tolAbs float64, timeframe stri
 	return levels
 }
 
-func legacyProximity(levels []Level, close, tolAbs float64) (
+func legacyProximity(levels []Level, price, tolAbs float64) (
 	nearSup, nearRes bool,
 	nearestSup, nearestRes float64,
 	supDist, resDist float64,
@@ -135,8 +135,8 @@ func legacyProximity(levels []Level, close, tolAbs float64) (
 	nearestResDist := math.MaxFloat64
 
 	for _, lvl := range levels {
-		if lvl.Price <= close {
-			dist := close - lvl.Price
+		if lvl.Price <= price {
+			dist := price - lvl.Price
 			if dist < nearestSupDist {
 				nearestSupDist = dist
 				nearestSup = lvl.Price
@@ -145,7 +145,7 @@ func legacyProximity(levels []Level, close, tolAbs float64) (
 				nearSup = dist <= tolAbs
 			}
 		} else {
-			dist := lvl.Price - close
+			dist := lvl.Price - price
 			if dist < nearestResDist {
 				nearestResDist = dist
 				nearestRes = lvl.Price
