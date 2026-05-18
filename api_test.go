@@ -43,3 +43,22 @@ func TestCompute_LegacyDefaultToleranceMatchesExplicitFallback(t *testing.T) {
 		t.Fatalf("expected implicit and explicit default legacy tolerance to match")
 	}
 }
+
+func TestComputeSRLegacy_InternalFallbackAndWindowEdges(t *testing.T) {
+	candles := buildSRCategoryCandles()
+	implicit := computeSRLegacy(candles, "5m", 120, 0)
+	explicit := computeSRLegacy(candles, "5m", 120, 0.002)
+	if !reflect.DeepEqual(implicit, explicit) {
+		t.Fatalf("expected internal legacy tolerance fallback to match explicit tolerance")
+	}
+
+	fullWindow := computeSRLegacy(makeFlatCandles(20, 100, time.Date(2024, 4, 18, 0, 0, 0, 0, time.UTC)), "5m", 100, 0.002)
+	if fullWindow.Timeframe != "5m" {
+		t.Fatalf("expected timeframe to survive full-window legacy calculation, got %+v", fullWindow)
+	}
+
+	empty := computeSRLegacy(makeFlatCandles(11, 100, time.Date(2024, 4, 19, 0, 0, 0, 0, time.UTC)), "5m", 1, 0.002)
+	if !reflect.DeepEqual(empty, EmptyLevels("5m")) {
+		t.Fatalf("expected empty levels when legacy lookback leaves no scan range, got %+v", empty)
+	}
+}

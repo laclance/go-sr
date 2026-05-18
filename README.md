@@ -30,10 +30,11 @@ const (
 )
 
 type Options struct {
-    Timeframe string
-    Lookback  int
-    Mode      Mode
-    Tolerance float64
+    Timeframe   string
+    Lookback    int
+    Mode        Mode
+    Tolerance   float64
+    MinStrength int
 }
 
 func Compute(candles []Candle, opts Options) Levels
@@ -44,6 +45,8 @@ func RequiredKlineLimit(baseInterval, targetInterval string, lookback int, mode 
 ```
 
 `Tolerance` applies only to `ModeLegacy`. When `Tolerance <= 0`, the fallback remains `0.002`.
+
+`MinStrength` applies only to `ModeZones`; values <= 0 use the default of 2.
 
 ## Behavioral Contract
 

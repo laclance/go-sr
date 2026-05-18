@@ -77,9 +77,6 @@ func newSRLookbackWindow(n, lookback int) srLookbackWindow {
 		lookback = n
 	}
 	start := n - lookback
-	if start < 0 {
-		start = 0
-	}
 	pivotStart := start
 	if pivotStart < pivotWindow {
 		pivotStart = pivotWindow

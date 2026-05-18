@@ -44,8 +44,5 @@ func computeAvgVolume(candles []Candle, period, n int) float64 {
 		sum += candles[i].Volume
 		count++
 	}
-	if count == 0 {
-		return 0
-	}
 	return sum / float64(count)
 }

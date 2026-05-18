@@ -54,6 +54,55 @@ func TestNewSRLookbackWindow_ClampsBounds(t *testing.T) {
 	}
 }
 
+func TestNewSRLookbackWindow_EmptyInputKeepsPositiveScanLen(t *testing.T) {
+	got := newSRLookbackWindow(0, 0)
+	if got.Start != 0 || got.PivotStart != pivotWindow || got.PivotEnd != pivotWindow || got.ScanLen != 1 {
+		t.Fatalf("unexpected empty-input lookback window: %+v", got)
+	}
+}
+
+func TestDetectZoneProximity_ZeroWidthZonesUsePriceFallback(t *testing.T) {
+	zones := []Level{
+		{Price: 100.00, Top: 100.00, Bottom: 100.00, Strength: 2, Score: 4, IsHigh: false},
+		{Price: 100.10, Top: 100.10, Bottom: 100.10, Strength: 3, Score: 5, IsHigh: true},
+	}
+
+	nearSup, nearRes, nearestSup, nearestRes, _, _, _, _, _, _ := detectZoneProximity(zones, 100.05)
+	if !nearSup || !nearRes {
+		t.Fatalf("expected zero-width fallback to mark both zones near, got support=%t resistance=%t", nearSup, nearRes)
+	}
+	if nearestSup != 100.00 || nearestRes != 100.10 {
+		t.Fatalf("unexpected nearest levels: support=%.2f resistance=%.2f", nearestSup, nearestRes)
+	}
+}
+
+func TestFindPivots_ReturnsNilWhenWindowHasNoInterior(t *testing.T) {
+	candles := makeFlatCandles(5, 100, time.Date(2024, 4, 12, 0, 0, 0, 0, time.UTC))
+	if got := findPivots(candles, "5m", 0, true); got != nil {
+		t.Fatalf("expected nil pivots for a window with no confirmed interior, got %+v", got)
+	}
+}
+
+func TestPivotBounceATR_EdgeCases(t *testing.T) {
+	candles := makeFlatCandles(5, 100, time.Date(2024, 4, 13, 0, 0, 0, 0, time.UTC))
+
+	if got := pivotBounceATR(candles, srPivot{Index: 2, Price: 100, ATRSnapshot: 0}); got != 0 {
+		t.Fatalf("expected zero bounce when ATR snapshot is unavailable, got %.4f", got)
+	}
+
+	got := pivotBounceATR(candles, srPivot{Index: 3, Price: 100, ATRSnapshot: 2, IsHigh: false})
+	if !almostEqual(got, 0.1) {
+		t.Fatalf("expected clamped trailing bounce of 0.1 ATR, got %.4f", got)
+	}
+}
+
+func TestComputeATR_ShortInputReturnsZero(t *testing.T) {
+	candles := makeFlatCandles(3, 100, time.Date(2024, 4, 14, 0, 0, 0, 0, time.UTC))
+	if got := computeATR(candles, rsiPeriod); got != 0 {
+		t.Fatalf("expected zero ATR for short input, got %.4f", got)
+	}
+}
+
 func TestComputeAvgVolume_WindowSelection(t *testing.T) {
 	candles := []Candle{
 		{Volume: 10},
@@ -67,6 +116,67 @@ func TestComputeAvgVolume_WindowSelection(t *testing.T) {
 	}
 	if got := computeAvgVolume(candles[:1], 20, 1); got != 0 {
 		t.Fatalf("expected zero avg volume for insufficient history, got %.2f", got)
+	}
+}
+
+func TestScoreZone_ClampsScanLenAndNegativeFreshness(t *testing.T) {
+	candles := makeFlatCandles(10, 100, time.Date(2024, 4, 15, 0, 0, 0, 0, time.UTC))
+	zone := Level{Top: 101, Bottom: 99, Strength: 2, LastTouchIndex: 0}
+	members := []srPivot{
+		{ConfirmedAtIndex: 1, BounceATR: 0},
+		{ConfirmedAtIndex: 2, BounceATR: 0},
+	}
+
+	if got := scoreZone(zone, members, candles, 0); got != 3 {
+		t.Fatalf("expected score with clamped freshness to be touch score only, got %.4f", got)
+	}
+}
+
+func TestCountFalseBreaks_ClampsNegativeEstablishedIndex(t *testing.T) {
+	candles := makeFlatCandles(4, 100, time.Date(2024, 4, 16, 0, 0, 0, 0, time.UTC))
+	candles[0].Close = 101.5
+	candles[1].Close = 100.5
+
+	if got := countFalseBreaks(Level{Top: 101, IsHigh: true}, candles, -3); got != 1 {
+		t.Fatalf("expected one false break after clamping negative start, got %d", got)
+	}
+}
+
+func TestBuildZone_TieBreaksMembersByPriceThenConfirmation(t *testing.T) {
+	candles := makeFlatCandles(20, 100, time.Date(2024, 4, 17, 0, 0, 0, 0, time.UTC))
+	cluster := []srPivot{
+		{Index: 5, ConfirmedAtIndex: 9, Price: 100, IsHigh: false, Timeframe: "5m", MergeWidth: 2},
+		{Index: 5, ConfirmedAtIndex: 10, Price: 99, IsHigh: false, Timeframe: "5m", MergeWidth: 2},
+		{Index: 5, ConfirmedAtIndex: 8, Price: 100, IsHigh: false, Timeframe: "5m", MergeWidth: 2},
+	}
+
+	got := buildZone(cluster, candles, 20)
+	if len(got.Pivots) != 3 {
+		t.Fatalf("expected three pivot diagnostics, got %d", len(got.Pivots))
+	}
+	if got.Pivots[0].Price != 99 {
+		t.Fatalf("expected lower price to sort first for equal indexes, got %+v", got.Pivots)
+	}
+	if got.Pivots[1].ConfirmedAtIndex != 8 || got.Pivots[2].ConfirmedAtIndex != 9 {
+		t.Fatalf("expected confirmation index tie-break for equal index and price, got %+v", got.Pivots)
+	}
+}
+
+func TestMedianFloat64_EmptyInputReturnsZero(t *testing.T) {
+	if got := medianFloat64(nil); got != 0 {
+		t.Fatalf("expected zero median for empty input, got %.4f", got)
+	}
+}
+
+func TestSortSRLevels_TimeframeTieBreak(t *testing.T) {
+	levels := []Level{
+		{Price: 100, IsHigh: false, LastTouchIndex: 8, Strength: 1, Timeframe: "1h"},
+		{Price: 100, IsHigh: false, LastTouchIndex: 8, Strength: 1, Timeframe: "15m"},
+	}
+
+	sortSRLevels(levels)
+	if levels[0].Timeframe != "15m" || levels[1].Timeframe != "1h" {
+		t.Fatalf("unexpected timeframe tie-break order: %+v", levels)
 	}
 }
 

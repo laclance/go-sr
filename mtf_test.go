@@ -123,6 +123,26 @@ func TestAggregateCandlesToTimeframe_DropsTrailingPartialBucket(t *testing.T) {
 	}
 }
 
+func TestAggregateCandlesToTimeframe_DropsDiscontinuousFullBucket(t *testing.T) {
+	start := time.Date(2024, 4, 1, 0, 0, 0, 0, time.UTC)
+	candles := make5mCandles(start, []struct {
+		open   float64
+		high   float64
+		low    float64
+		close  float64
+		volume float64
+	}{
+		{100, 101, 99, 100.5, 10},
+		{100.5, 102, 100, 101.5, 20},
+		{101.5, 103, 101, 102.5, 30},
+	})
+	candles[2].OpenTime = start.Add(12 * time.Minute)
+
+	if got := AggregateCandlesToTimeframe(candles, "5m", "15m"); got != nil {
+		t.Fatalf("expected discontinuous full bucket to be dropped, got %+v", got)
+	}
+}
+
 func TestAggregateCandlesToTimeframe_UsesUTCBucketAlignment(t *testing.T) {
 	start := time.Date(2024, 4, 1, 0, 5, 0, 0, time.UTC)
 	values := make([]struct {
@@ -202,6 +222,9 @@ func TestRequiredKlineLimit_ModeAware(t *testing.T) {
 	if got := RequiredKlineLimit("15m", "1h", 50, ModeLegacy); got != 281 {
 		t.Fatalf("legacy 15m->1h required limit: got %d want 281", got)
 	}
+	if got := RequiredKlineLimit("1h", "1d", 1, ModeZones); got != 457 {
+		t.Fatalf("zone 1h->1d required limit: got %d want 457", got)
+	}
 }
 
 func TestRequiredKlineLimit_InvalidCombosReturnZero(t *testing.T) {
@@ -223,5 +246,11 @@ func TestRequiredKlineLimit_InvalidCombosReturnZero(t *testing.T) {
 				t.Fatalf("expected zero required limit for %s -> %s, got %d", tc.base, tc.to, got)
 			}
 		})
+	}
+}
+
+func TestIntervalDuration_UnknownUnitReturnsZero(t *testing.T) {
+	if got := intervalDuration("1w"); got != 0 {
+		t.Fatalf("expected unknown interval unit to return zero, got %s", got)
 	}
 }
