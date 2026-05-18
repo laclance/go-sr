@@ -75,6 +75,24 @@ CI runs on every push and pull request. The gate requires:
 - `100.0%` statement coverage
 - 5-second fuzz smoke tests for aggregation and compute invariants
 
+## Manual Chart Inspection
+
+Generate a local HTML chart from the BTC fixture when you want to visually inspect whether SR zones line up with market structure:
+
+```bash
+GO_SR_CHART=/tmp/go-sr-btc-5m.html go test -run TestGenerateManualSRChart -count=1 -v
+```
+
+Optional overrides:
+
+```bash
+GO_SR_CHART_TIMEFRAME=15m
+GO_SR_CHART_MODE=legacy
+GO_SR_CHART_LOOKBACK=80
+GO_SR_CHART_WINDOW=300
+GO_SR_CHART_MIN_STRENGTH=1
+```
+
 ## Install
 
 ```bash
