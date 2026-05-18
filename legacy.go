@@ -142,6 +142,10 @@ func legacyProximity(levels []Level, price, tolAbs float64) (
 				nearestSup = lvl.Price
 				supDist = dist
 				supStr = lvl.Strength
+				// nearSup tracks proximity of the *nearest* support only. A
+				// closer-but-out-of-tolerance level overrides a farther
+				// within-tolerance one — by design, since callers ask "is the
+				// nearest level near?" not "is any level near?".
 				nearSup = dist <= tolAbs
 			}
 		} else {

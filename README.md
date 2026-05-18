@@ -57,6 +57,9 @@ func RequiredKlineLimit(baseInterval, targetInterval string, lookback int, mode 
 - `AggregateCandlesToTimeframe` uses UTC-aligned buckets and drops leading/trailing partial buckets.
 - `RequiredKlineLimit` returns the number of raw candles needed to build a higher-timeframe SR bundle and includes one extra live candle for exchange REST responses.
 - Supported interval strings use `<n><unit>` with `m`, `h`, or `d`, and the target interval must be larger than and evenly divisible by the base interval.
+- `NearSupport` / `NearResistance` flag whether the **nearest** level on each side is within a "near" threshold:
+  - `ModeZones`: within `2 ×` the zone's half-width (i.e., distance to zone center ≤ zone width). If the zone has zero width, the threshold falls back to `0.1%` of the current price.
+  - `ModeLegacy`: within `Tolerance × close` (absolute price distance). A closer-but-out-of-tolerance level overrides a farther within-tolerance one — the flag describes the nearest level, not any level.
 
 ## Quality Gate
 
