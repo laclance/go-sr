@@ -17,9 +17,7 @@ func scoreZone(zone Level, members []srPivot, candles []Candle, scanLen int) flo
 
 	zoneEstablishedAt := members[0].ConfirmedAtIndex
 	for _, p := range members[1:] {
-		if p.ConfirmedAtIndex > zoneEstablishedAt {
-			zoneEstablishedAt = p.ConfirmedAtIndex
-		}
+		zoneEstablishedAt = max(zoneEstablishedAt, p.ConfirmedAtIndex)
 	}
 
 	falseBreakPenalty := 1.5 * float64(countFalseBreaks(zone, candles, zoneEstablishedAt))

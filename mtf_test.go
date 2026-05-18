@@ -143,6 +143,32 @@ func TestAggregateCandlesToTimeframe_DropsDiscontinuousFullBucket(t *testing.T) 
 	}
 }
 
+func TestAggregateCandlesToTimeframe_IgnoresDuplicateOpenTimes(t *testing.T) {
+	start := time.Date(2024, 4, 1, 0, 0, 0, 0, time.UTC)
+	candles := make5mCandles(start, []struct {
+		open   float64
+		high   float64
+		low    float64
+		close  float64
+		volume float64
+	}{
+		{100, 101, 99, 100.5, 10},
+		{100.5, 102, 100, 101.5, 20},
+		{100.5, 102, 100, 101.5, 20},
+		{101.5, 103, 101, 102.5, 30},
+	})
+	candles[2].OpenTime = candles[1].OpenTime
+	candles[3].OpenTime = start.Add(10 * time.Minute)
+
+	agg := AggregateCandlesToTimeframe(candles, "5m", "15m")
+	if len(agg) != 1 {
+		t.Fatalf("expected duplicate source candle to be ignored, got %d buckets", len(agg))
+	}
+	if agg[0].Open != 100 || agg[0].High != 103 || agg[0].Low != 99 || agg[0].Close != 102.5 || agg[0].Volume != 60 {
+		t.Fatalf("unexpected aggregated OHLCV after duplicate input: %+v", agg[0])
+	}
+}
+
 func TestAggregateCandlesToTimeframe_UsesUTCBucketAlignment(t *testing.T) {
 	start := time.Date(2024, 4, 1, 0, 5, 0, 0, time.UTC)
 	values := make([]struct {

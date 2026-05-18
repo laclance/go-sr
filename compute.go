@@ -117,19 +117,30 @@ func detectZoneProximity(zones []Level, close float64) (
 	var bestSupp, bestResi *best
 
 	for _, z := range zones {
-		if z.Price <= close {
-			dist := close - z.Price
+		supportSide := close >= z.Bottom
+		resistanceSide := close <= z.Top
+		if supportSide && resistanceSide {
+			if z.IsHigh {
+				supportSide = false
+			} else {
+				resistanceSide = false
+			}
+		}
+
+		if supportSide {
+			dist := math.Max(0, close-z.Price)
 			if dist < nearestSupDist {
 				nearestSupDist = dist
 				bestSupp = &best{zone: z, dist: dist}
 			}
-			continue
 		}
 
-		dist := z.Price - close
-		if dist < nearestResDist {
-			nearestResDist = dist
-			bestResi = &best{zone: z, dist: dist}
+		if resistanceSide {
+			dist := math.Max(0, z.Price-close)
+			if dist < nearestResDist {
+				nearestResDist = dist
+				bestResi = &best{zone: z, dist: dist}
+			}
 		}
 	}
 

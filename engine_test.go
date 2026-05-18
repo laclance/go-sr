@@ -49,6 +49,26 @@ func TestZoneProximity_NearResistance_WhenPriceJustBelowZone(t *testing.T) {
 	}
 }
 
+func TestZoneProximity_ExactResistanceCenter_UsesZoneSide(t *testing.T) {
+	zones := []Level{{Price: 50000, Top: 50100, Bottom: 49900, Strength: 3, Score: 7.0, IsHigh: true}}
+	nearSup, nearRes, nearestSup, nearestRes, supDist, resDist, _, _, _, _ := detectZoneProximity(zones, 50000)
+	if nearSup {
+		t.Error("expected exact resistance-center touch not to be classified as support")
+	}
+	if !nearRes {
+		t.Error("expected nearResistance=true")
+	}
+	if nearestSup != 0 || supDist != 0 {
+		t.Errorf("nearest support should remain unset, got price=%v dist=%v", nearestSup, supDist)
+	}
+	if nearestRes != 50000 {
+		t.Errorf("nearestResistance: want 50000, got %v", nearestRes)
+	}
+	if resDist != 0 {
+		t.Errorf("resistanceDistance: want 0, got %v", resDist)
+	}
+}
+
 func TestZoneProximity_TooFarAway_NotNear(t *testing.T) {
 	zones := []Level{{Price: 48000, Top: 48050, Bottom: 47950, Strength: 2, Score: 5.0, IsHigh: false}}
 	nearSup, nearRes, _, _, _, _, _, _, _, _ := detectZoneProximity(zones, 50000)

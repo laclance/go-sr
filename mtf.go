@@ -58,6 +58,7 @@ func AggregateCandlesToTimeframe(candles []Candle, fromInterval, toInterval stri
 		start   time.Time
 		end     time.Time
 		candles []Candle
+		seen    map[time.Time]struct{}
 	}
 
 	var (
@@ -107,8 +108,14 @@ func AggregateCandlesToTimeframe(candles []Candle, fromInterval, toInterval stri
 			current = &bucket{
 				start: bucketStart,
 				end:   bucketEnd,
+				seen:  make(map[time.Time]struct{}, bucketSize),
 			}
 		}
+		openTime := candle.OpenTime.UTC()
+		if _, ok := current.seen[openTime]; ok {
+			continue
+		}
+		current.seen[openTime] = struct{}{}
 		current.candles = append(current.candles, candle)
 	}
 	flush()
