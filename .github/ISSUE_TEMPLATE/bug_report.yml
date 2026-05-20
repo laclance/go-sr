@@ -1,0 +1,63 @@
+name: Bug report
+description: Report a reproducible bug in go-sr.
+title: "fix: "
+labels:
+  - bug
+body:
+  - type: input
+    id: go-version
+    attributes:
+      label: Go version
+      placeholder: "go version go1.23.2 linux/amd64"
+    validations:
+      required: true
+  - type: input
+    id: os
+    attributes:
+      label: OS
+      placeholder: "Ubuntu 24.04, macOS 15, Windows 11"
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: go-sr version or commit
+      placeholder: "v1.0.0 or commit SHA"
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Minimal reproduction
+      description: Include the smallest code or test case that reproduces the issue.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+  - type: textarea
+    id: sample-input
+    attributes:
+      label: Sample candles or input
+      description: Include sample candle data if it helps reproduce the issue.
+      render: text
+  - type: dropdown
+    id: determinism-lookahead
+    attributes:
+      label: Could this involve determinism or lookahead bias?
+      options:
+        - "No"
+        - "Yes, determinism"
+        - "Yes, lookahead bias"
+        - "Unsure"
+    validations:
+      required: true

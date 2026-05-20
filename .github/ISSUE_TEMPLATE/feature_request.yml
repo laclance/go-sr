@@ -1,0 +1,32 @@
+name: Feature request
+description: Propose a small API or behavior improvement.
+title: "feat: "
+labels:
+  - enhancement
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What problem should this solve?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed API or behavior
+      description: Describe the smallest useful change.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: What other approaches did you consider?
+  - type: textarea
+    id: compatibility
+    attributes:
+      label: Compatibility concerns
+      description: Note any public API, deterministic behavior, or dependency impact.
+    validations:
+      required: true
