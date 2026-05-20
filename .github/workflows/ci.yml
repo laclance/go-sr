@@ -2,6 +2,8 @@ name: CI
 
 on:
   push:
+    branches:
+      - main
   pull_request:
 
 permissions:
@@ -9,7 +11,7 @@ permissions:
 
 jobs:
   test:
-    name: Test
+    name: Quality Gate
     runs-on: ubuntu-latest
 
     steps:
@@ -48,8 +50,9 @@ jobs:
 
       - name: Coverage
         run: |
-          go test -coverprofile=coverage.out ./...
-          total="$(go tool cover -func=coverage.out | awk '/^total:/ {print $3}')"
+          coverage_file="${RUNNER_TEMP}/go-sr-coverage.out"
+          go test -coverprofile="${coverage_file}" ./...
+          total="$(go tool cover -func="${coverage_file}" | awk '/^total:/ {print $3}')"
           echo "coverage=${total}"
           test "${total}" = "100.0%"
 

@@ -1,0 +1,44 @@
+name: AI task
+description: Scope a task for an AI-assisted contributor.
+title: "chore: "
+labels:
+  - ai-task
+body:
+  - type: textarea
+    id: objective
+    attributes:
+      label: Objective
+      description: State the exact outcome expected.
+    validations:
+      required: true
+  - type: textarea
+    id: files
+    attributes:
+      label: Files likely involved
+      description: List likely files or packages. Leave room for the agent to verify.
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: What must be true when the task is complete?
+    validations:
+      required: true
+  - type: textarea
+    id: tests
+    attributes:
+      label: Required tests
+      description: Name the tests or checks expected.
+    validations:
+      required: true
+  - type: textarea
+    id: out-of-scope
+    attributes:
+      label: Out of scope
+      description: What must not change?
+    validations:
+      required: true
+  - type: textarea
+    id: notes
+    attributes:
+      label: Notes for AI agent
+      description: Include constraints, edge cases, or relevant prior context.
