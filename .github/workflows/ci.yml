@@ -24,7 +24,8 @@ jobs:
 
       - name: Install analysis tools
         run: |
-          go install honnef.co/go/tools/cmd/staticcheck@v0.7.0
+          # This module targets Go 1.23.2; newer Staticcheck release lines require newer Go toolchains.
+          go install honnef.co/go/tools/cmd/staticcheck@2024.1.1
           go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.64.8
 
       - name: Check formatting
