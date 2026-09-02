@@ -3,7 +3,7 @@
 [![CI](https://github.com/laclance/go-sr/actions/workflows/ci.yml/badge.svg)](https://github.com/laclance/go-sr/actions/workflows/ci.yml)
 [![Go Reference](https://pkg.go.dev/badge/github.com/laclance/go-sr.svg)](https://pkg.go.dev/github.com/laclance/go-sr)
 [![Go Report Card](https://goreportcard.com/badge/github.com/laclance/go-sr)](https://goreportcard.com/report/github.com/laclance/go-sr)
-[![License: GPL-3.0](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
+[![License: Apache-2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 
 **Deterministic, closed-candle support/resistance detection for Go trading systems.**
 
@@ -238,4 +238,4 @@ If you are using `go-sr` in a project, opening a discussion or issue with your u
 
 ## License
 
-GPL-3.0. See [`LICENSE`](LICENSE).
+Apache-2.0. See [`LICENSE`](LICENSE).
