@@ -97,6 +97,10 @@ go run ./examples/basic
 
 The example imports only the Go standard library plus `github.com/laclance/go-sr`; it does not depend on repository test helpers. You can also copy `examples/basic/main.go` into another Go module unchanged, then replace `demoCandles` with candles from your exchange, broker, backtest fixture, or market-data pipeline.
 
+## Integrations
+
+- [BBGO closed-kline adapter](examples/bbgo) shows how to map BBGO `types.KLine` events into a bounded slice of closed `sr.Candle` values without adding BBGO to this module.
+
 ## Why `go-sr`?
 
 Many trading implementations accidentally make support/resistance look better in backtests by allowing future candles to influence historical pivots. `go-sr` is built around prefix-stable, confirmation-based behavior so the same candle history produces the same result whether it is processed in a backtest or a live strategy.
