@@ -84,6 +84,16 @@ levels.NearSupport
 levels.NearResistance
 ```
 
+## Standalone Example
+
+[`examples/basic`](examples/basic) is a self-contained runnable program. It generates deterministic closed 5m candles, runs zone mode, and prints the detected level count plus nearest support and resistance.
+
+```bash
+go run ./examples/basic
+```
+
+The example imports only the Go standard library plus `github.com/laclance/go-sr`; it does not depend on repository test helpers. Replace `demoCandles` with candles from your exchange, broker, backtest fixture, or market-data pipeline.
+
 ## Why `go-sr`?
 
 Many trading implementations accidentally make support/resistance look better in backtests by allowing future candles to influence historical pivots. `go-sr` is built around prefix-stable, confirmation-based behavior so the same candle history produces the same result whether it is processed in a backtest or a live strategy.
@@ -164,7 +174,7 @@ func WarmupCandles(lookback int, mode Mode) int
 func RequiredKlineLimit(baseInterval, targetInterval string, lookback int, mode Mode) int
 ```
 
-See the runnable examples in [`examples_test.go`](examples_test.go) and the generated API documentation on [pkg.go.dev](https://pkg.go.dev/github.com/laclance/go-sr).
+See the standalone program in [`examples/basic`](examples/basic), runnable package examples in [`examples_test.go`](examples_test.go), and the generated API documentation on [pkg.go.dev](https://pkg.go.dev/github.com/laclance/go-sr).
 
 ## Behavioral Contract
 
