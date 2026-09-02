@@ -24,7 +24,11 @@ func loadBTCCSVFixture(t *testing.T) []Candle {
 	if err != nil {
 		t.Fatalf("open btc csv: %v", err)
 	}
-	defer f.Close()
+	defer func() {
+		if err := f.Close(); err != nil {
+			t.Errorf("close btc csv: %v", err)
+		}
+	}()
 
 	rows, err := csv.NewReader(f).ReadAll()
 	if err != nil {
