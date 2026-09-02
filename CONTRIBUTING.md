@@ -49,3 +49,7 @@ Open an issue with a minimal reproduction, Go version, OS, module version or com
 - Do not add dependencies unless the PR explains why they are needed.
 
 AI-assisted contributions are welcome. Generated PRs must pass CI and be reviewed by a maintainer before merge.
+
+## Contribution License
+
+Unless explicitly stated otherwise, contributions intentionally submitted for inclusion in `go-sr` are provided under the Apache License 2.0, consistent with the repository [`LICENSE`](LICENSE).
