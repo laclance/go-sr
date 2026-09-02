@@ -17,6 +17,12 @@
 - No third-party runtime dependencies
 - CI with race detection, static analysis, 100% statement coverage, and fuzz smoke tests
 
+## Example
+
+![BTC 5m support/resistance zones detected by go-sr](docs/go-sr-preview.png)
+
+*Zone-mode output generated from the repository's BTC 5m fixture. The preview shows detected support/resistance structure, qualified zones, and nearest levels.*
+
 ## Install
 
 ```bash
