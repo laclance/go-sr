@@ -4,7 +4,7 @@
 [![Go Reference](https://pkg.go.dev/badge/github.com/laclance/go-sr.svg)](https://pkg.go.dev/github.com/laclance/go-sr)
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 
-**Deterministic, closed-candle support/resistance detection for Go trading systems.**
+**Deterministic, no-lookahead support/resistance detection for Go trading systems.**
 
 `go-sr` is a focused Go module for support/resistance detection that is designed for backtests and live systems where reproducibility and no-lookahead behavior matter.
 
@@ -87,11 +87,15 @@ levels.NearResistance
 
 [`examples/basic`](examples/basic) is a self-contained runnable program. It generates deterministic closed 5m candles, runs zone mode, and prints the detected level count plus nearest support and resistance.
 
+From a clean directory, copy and run:
+
 ```bash
+git clone --depth=1 https://github.com/laclance/go-sr.git
+cd go-sr
 go run ./examples/basic
 ```
 
-The example imports only the Go standard library plus `github.com/laclance/go-sr`; it does not depend on repository test helpers. Replace `demoCandles` with candles from your exchange, broker, backtest fixture, or market-data pipeline.
+The example imports only the Go standard library plus `github.com/laclance/go-sr`; it does not depend on repository test helpers. You can also copy `examples/basic/main.go` into another Go module unchanged, then replace `demoCandles` with candles from your exchange, broker, backtest fixture, or market-data pipeline.
 
 ## Why `go-sr`?
 
