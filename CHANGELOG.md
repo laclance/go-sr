@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.5](https://github.com/laclance/go-sr/compare/v1.1.4...v1.1.5) (2026-09-08)
+
+
+### Bug Fixes
+
+* keep zone member pivots inside geometry ([#30](https://github.com/laclance/go-sr/issues/30)) ([bf48cfe](https://github.com/laclance/go-sr/commit/bf48cfe9ca0376b09d2cbf547fb2df94f88ca8df))
+
 ## [1.1.4](https://github.com/laclance/go-sr/compare/v1.1.3...v1.1.4) (2026-09-08)
 
 
