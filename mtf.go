@@ -98,6 +98,7 @@ func AggregateCandlesToTimeframe(candles []Candle, fromInterval, toInterval stri
 	var (
 		out     []Candle
 		current *bucket
+		invalid bool
 	)
 
 	flush := func() {
@@ -131,6 +132,10 @@ func AggregateCandlesToTimeframe(candles []Candle, fromInterval, toInterval stri
 			}
 			agg.Volume += candle.Volume
 		}
+		if !candleValuesFinite(agg) {
+			invalid = true
+			return
+		}
 		out = append(out, agg)
 	}
 
@@ -142,6 +147,9 @@ func AggregateCandlesToTimeframe(candles []Candle, fromInterval, toInterval stri
 		bucketEnd := bucketStart.Add(toDur)
 		if current == nil || !current.start.Equal(bucketStart) {
 			flush()
+			if invalid {
+				return nil
+			}
 			current = &bucket{
 				start: bucketStart,
 				end:   bucketEnd,
@@ -156,6 +164,9 @@ func AggregateCandlesToTimeframe(candles []Candle, fromInterval, toInterval stri
 		current.candles = append(current.candles, candle)
 	}
 	flush()
+	if invalid {
+		return nil
+	}
 
 	return out
 }
