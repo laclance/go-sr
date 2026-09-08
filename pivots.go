@@ -1,5 +1,7 @@
 package sr
 
+import "math"
+
 type srPivot PivotInfo
 
 func findPivotHighs(candles []Candle, timeframe string, lookback int) []srPivot {
@@ -76,7 +78,7 @@ func isConfirmedPivot(candles []Candle, idx int, isHigh bool) bool {
 
 func pivotMergeWidth(p srPivot) float64 {
 	width := p.ATRSnapshot * 0.25
-	priceFloor := p.Price * 0.001
+	priceFloor := math.Abs(p.Price) * 0.001
 	if width < priceFloor {
 		width = priceFloor
 	}
