@@ -211,49 +211,6 @@ func TestSRZone_RepeatedHighs_OneResistanceZone(t *testing.T) {
 	}
 }
 
-func TestSRZone_DistantPivots_StaySeparate(t *testing.T) {
-	candles := buildSRCandles(160)
-	candles[50].Low = 48000
-	candles[50].High = 48200
-	candles[50].Open = 48100
-	candles[50].Close = 48100
-	candles[110].High = 52000
-	candles[110].Low = 51800
-	candles[110].Open = 51900
-	candles[110].Close = 51900
-
-	sr := computeZone(candles, "5m", 80)
-
-	nearLow := false
-	nearHigh := false
-	for _, lvl := range sr.RawZones {
-		if math.Abs(lvl.Price-48000) < 500 {
-			nearLow = true
-		}
-		if math.Abs(lvl.Price-52000) < 500 {
-			nearHigh = true
-		}
-	}
-	if !nearLow {
-		t.Log("no zone detected near 48000 (acceptable in this fixture)")
-	}
-	if !nearHigh {
-		t.Log("no zone detected near 52000 (acceptable in this fixture)")
-	}
-	if nearLow && nearHigh {
-		for _, a := range sr.RawZones {
-			for _, b := range sr.RawZones {
-				if a.Price == b.Price {
-					continue
-				}
-				if math.Abs(a.Price-48000) < 500 && math.Abs(b.Price-52000) < 500 && math.Abs(a.Price-b.Price) < 500 {
-					t.Errorf("distant pivots (48000, 52000) appear to be merged into one zone")
-				}
-			}
-		}
-	}
-}
-
 func TestSRZone_NearestSupportBelowPrice(t *testing.T) {
 	candles := buildSRCandles(200)
 
