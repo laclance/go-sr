@@ -17,6 +17,6 @@ The 120-candle `Lookback` controls how much history the S/R calculation scans; i
 
 The callback includes the newly closed kline in each computation. It must never append the current still-open kline: do not build this slice from `OnKLine`, a live-kline cache, or a REST response that includes an unfinished final candle.
 
-The result exposes `NearestSupport`, `NearestResistance`, `NearSupport`, and `NearResistance` for strategy decisions. A zero nearest price means no qualifying level was found on that side.
+The result exposes `NearestSupport`, `NearestResistance`, `NearSupport`, and `NearResistance` for strategy decisions. Use `NearestSupportStrength > 0` or `NearestResistanceStrength > 0` to determine whether a qualifying level was found on that side; a nearest price of zero can be a legitimate level value.
 
 This remains integration guidance rather than a complete runnable BBGO strategy. BBGO is intentionally confined to this example module and is not a dependency of `github.com/laclance/go-sr`. BBGO is licensed under AGPL-3.0; review its license requirements for your use case.
