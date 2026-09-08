@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.1](https://github.com/laclance/go-sr/compare/v1.1.0...v1.1.1) (2026-09-08)
+
+
+### Bug Fixes
+
+* preserve MTF warmup across UTC alignment ([#13](https://github.com/laclance/go-sr/issues/13)) ([cfbf696](https://github.com/laclance/go-sr/commit/cfbf69645fafd56dbf281710c2efacc5f6169882))
+
 ## [1.1.0](https://github.com/laclance/go-sr/compare/v1.0.0...v1.1.0) (2026-09-02)
 
 
