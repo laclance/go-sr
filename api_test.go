@@ -115,3 +115,45 @@ func TestComputeSRLegacy_InternalFallbackAndWindowEdges(t *testing.T) {
 		t.Fatalf("expected empty levels when legacy lookback leaves no scan range, got %+v", empty)
 	}
 }
+
+func TestCompute_LegacyNegativePricesUseMagnitudeTolerance(t *testing.T) {
+	t0 := time.Date(2024, 4, 21, 0, 0, 0, 0, time.UTC)
+	candles := make([]Candle, 17)
+	for i := range candles {
+		openTime := t0.Add(time.Duration(i) * time.Minute)
+		candles[i] = Candle{
+			OpenTime:  openTime,
+			CloseTime: openTime.Add(time.Minute),
+			Open:      -102,
+			High:      -101,
+			Low:       -103,
+			Close:     -102,
+			Volume:    100,
+		}
+	}
+	candles[5].High = -100
+	candles[11].High = -100
+
+	got, err := Compute(candles, Options{
+		Mode:      ModeLegacy,
+		Lookback:  0,
+		Tolerance: 0.002,
+	})
+	if err != nil {
+		t.Fatalf("unexpected Compute error: %v", err)
+	}
+
+	resistance := findLevelByPrice(got.Levels, -100)
+	if resistance == nil {
+		t.Fatalf("expected repeated -100 swing highs to produce a resistance level, got %+v", got.Levels)
+	}
+	if resistance.Strength != 2 {
+		t.Fatalf("expected repeated resistance pivots to cluster with strength 2, got %+v", *resistance)
+	}
+	if resistance.Top < resistance.Bottom {
+		t.Fatalf("expected non-inverted geometry, got top=%v bottom=%v", resistance.Top, resistance.Bottom)
+	}
+	if resistance.Top != -99.796 || resistance.Bottom != -100.204 {
+		t.Fatalf("expected magnitude-based tolerance geometry, got top=%v bottom=%v", resistance.Top, resistance.Bottom)
+	}
+}
