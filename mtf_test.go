@@ -239,17 +239,17 @@ func TestWarmupCandles_ModeAware(t *testing.T) {
 }
 
 func TestRequiredKlineLimit_ModeAware(t *testing.T) {
-	if got := RequiredKlineLimit("5m", "1h", 50, ModeLegacy); got != 841 {
-		t.Fatalf("legacy required limit: got %d want 841", got)
+	if got := RequiredKlineLimit("5m", "1h", 50, ModeLegacy); got != 852 {
+		t.Fatalf("legacy required limit: got %d want 852", got)
 	}
-	if got := RequiredKlineLimit("5m", "1h", 50, ModeZones); got != 817 {
-		t.Fatalf("zone required limit: got %d want 817", got)
+	if got := RequiredKlineLimit("5m", "1h", 50, ModeZones); got != 828 {
+		t.Fatalf("zone required limit: got %d want 828", got)
 	}
-	if got := RequiredKlineLimit("15m", "1h", 50, ModeLegacy); got != 281 {
-		t.Fatalf("legacy 15m->1h required limit: got %d want 281", got)
+	if got := RequiredKlineLimit("15m", "1h", 50, ModeLegacy); got != 284 {
+		t.Fatalf("legacy 15m->1h required limit: got %d want 284", got)
 	}
-	if got := RequiredKlineLimit("1h", "1d", 1, ModeZones); got != 457 {
-		t.Fatalf("zone 1h->1d required limit: got %d want 457", got)
+	if got := RequiredKlineLimit("1h", "1d", 1, ModeZones); got != 480 {
+		t.Fatalf("zone 1h->1d required limit: got %d want 480", got)
 	}
 }
 
