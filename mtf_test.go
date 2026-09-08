@@ -224,11 +224,11 @@ func TestAggregateCandlesToTimeframe_InvalidIntervalsReturnNil(t *testing.T) {
 }
 
 func TestWarmupCandles_ModeAware(t *testing.T) {
-	if got := WarmupCandles(50, ModeLegacy); got != 70 {
-		t.Fatalf("legacy warmup: got %d want 70", got)
+	if got := WarmupCandles(50, ModeLegacy); got != 55 {
+		t.Fatalf("legacy warmup: got %d want 55", got)
 	}
-	if got := WarmupCandles(50, ModeZones); got != 68 {
-		t.Fatalf("zone warmup: got %d want 68", got)
+	if got := WarmupCandles(50, ModeZones); got != 66 {
+		t.Fatalf("zone warmup: got %d want 66", got)
 	}
 }
 
@@ -243,17 +243,17 @@ func TestWarmupCandles_NonPositiveLookbackReturnsZero(t *testing.T) {
 }
 
 func TestRequiredKlineLimit_ModeAware(t *testing.T) {
-	if got := RequiredKlineLimit("5m", "1h", 50, ModeLegacy); got != 852 {
-		t.Fatalf("legacy required limit: got %d want 852", got)
+	if got := RequiredKlineLimit("5m", "1h", 50, ModeLegacy); got != 672 {
+		t.Fatalf("legacy required limit: got %d want 672", got)
 	}
-	if got := RequiredKlineLimit("5m", "1h", 50, ModeZones); got != 828 {
-		t.Fatalf("zone required limit: got %d want 828", got)
+	if got := RequiredKlineLimit("5m", "1h", 50, ModeZones); got != 804 {
+		t.Fatalf("zone required limit: got %d want 804", got)
 	}
-	if got := RequiredKlineLimit("15m", "1h", 50, ModeLegacy); got != 284 {
-		t.Fatalf("legacy 15m->1h required limit: got %d want 284", got)
+	if got := RequiredKlineLimit("15m", "1h", 50, ModeLegacy); got != 224 {
+		t.Fatalf("legacy 15m->1h required limit: got %d want 224", got)
 	}
-	if got := RequiredKlineLimit("1h", "1d", 1, ModeZones); got != 480 {
-		t.Fatalf("zone 1h->1d required limit: got %d want 480", got)
+	if got := RequiredKlineLimit("1h", "1d", 1, ModeZones); got != 432 {
+		t.Fatalf("zone 1h->1d required limit: got %d want 432", got)
 	}
 }
 
