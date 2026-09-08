@@ -153,7 +153,7 @@ func TestCompute_LegacyNegativePricesUseMagnitudeTolerance(t *testing.T) {
 	if resistance.Top < resistance.Bottom {
 		t.Fatalf("expected non-inverted geometry, got top=%v bottom=%v", resistance.Top, resistance.Bottom)
 	}
-	if resistance.Top != -99.796 || resistance.Bottom != -100.204 {
+	if !almostEqual(resistance.Top, -99.796) || !almostEqual(resistance.Bottom, -100.204) {
 		t.Fatalf("expected magnitude-based tolerance geometry, got top=%v bottom=%v", resistance.Top, resistance.Bottom)
 	}
 }
