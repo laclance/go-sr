@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.10](https://github.com/laclance/go-sr/compare/v1.1.9...v1.1.10) (2026-09-08)
+
+
+### Bug Fixes
+
+* return exact minimum warmup history ([#41](https://github.com/laclance/go-sr/issues/41)) ([1ddb669](https://github.com/laclance/go-sr/commit/1ddb669b29d8a47a8a3b2568c670ad2b5469b5f2))
+
 ## [1.1.9](https://github.com/laclance/go-sr/compare/v1.1.8...v1.1.9) (2026-09-08)
 
 
