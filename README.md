@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/laclance/go-sr/actions/workflows/ci.yml/badge.svg)](https://github.com/laclance/go-sr/actions/workflows/ci.yml)
 [![Go Reference](https://pkg.go.dev/badge/github.com/laclance/go-sr.svg)](https://pkg.go.dev/github.com/laclance/go-sr)
-[![License: Apache-2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
+[![License: Apache-2.0](https://img.shields.io/badge/Apache_2.0-blue.svg)](LICENSE)
 
 **Deterministic, no-lookahead support/resistance detection for Go trading systems.**
 
@@ -156,7 +156,7 @@ warmup := sr.WarmupCandles(50, sr.ModeZones)
 limit := sr.RequiredKlineLimit("5m", "1h", 50, sr.ModeZones)
 ```
 
-`WarmupCandles` and `RequiredKlineLimit` return `0` when `lookback <= 0` because an all-supplied-history calculation has no finite warmup/fetch size. For bounded lookbacks, `RequiredKlineLimit` includes enough slack for UTC target-bucket alignment plus one potentially live final candle. Exclude that still-open candle before calling `AggregateCandlesToTimeframe` or `Compute`; both APIs expect closed candles.
+`WarmupCandles` and `RequiredKlineLimit` return `0` when `lookback <= 0` because an all-supplied-history calculation has no finite warmup/fetch size. For bounded lookbacks, `RequiredKlineLimit` includes enough slack for fixed-duration UTC target buckets anchored at `1970-01-01T00:00:00Z`, plus one potentially live final candle. Exclude that still-open candle before calling `AggregateCandlesToTimeframe` or `Compute`; both APIs expect closed candles.
 
 ## Public API
 
@@ -192,8 +192,8 @@ See the standalone program in [`examples/basic`](examples/basic), runnable packa
 - Unknown modes cause `Compute` to return `EmptyLevels(opts.Timeframe)` plus an error.
 - `WarmupCandles` and `RequiredKlineLimit` require a positive, bounded lookback and return `0` when a finite size cannot be provided, including for non-positive lookbacks and existing invalid-input cases.
 - Zone-mode pivots are confirmation-based; no future candles are read beyond the current prefix.
-- `AggregateCandlesToTimeframe` uses UTC-aligned buckets and drops leading/trailing partial buckets.
-- For positive lookbacks, `RequiredKlineLimit` includes enough raw candles to preserve the higher-timeframe warmup after UTC alignment, plus one potentially live candle for exchange REST responses.
+- `AggregateCandlesToTimeframe` uses fixed-duration UTC buckets anchored at `1970-01-01T00:00:00Z` and drops leading/trailing partial buckets.
+- For positive lookbacks, `RequiredKlineLimit` includes enough raw candles to preserve the higher-timeframe warmup after alignment to that bucket grid, plus one potentially live candle for exchange REST responses.
 - Callers must exclude still-open candles before passing data to `AggregateCandlesToTimeframe` or `Compute`.
 - Supported interval strings use `<n><unit>` with `m`, `h`, or `d`; the target interval must be larger than and evenly divisible by the base interval.
 - `NearSupport` / `NearResistance` describe whether the nearest level on each side is within the mode-specific near threshold.
@@ -217,47 +217,3 @@ This module intentionally does **not** own:
 - Order execution
 
 Keeping exchange and strategy concerns outside the package makes `go-sr` usable across backtest engines, bots, and brokers.
-
-## Manual Chart Inspection
-
-The repository includes a BTC fixture and an HTML chart generator for visually inspecting detected zones:
-
-```bash
-GO_SR_CHART=/tmp/go-sr-btc-5m.html \
-  go test -run TestGenerateManualSRChart -count=1 -v
-
-xdg-open /tmp/go-sr-btc-5m.html
-```
-
-Optional overrides:
-
-```bash
-GO_SR_CHART_TIMEFRAME=15m
-GO_SR_CHART_MODE=legacy
-GO_SR_CHART_LOOKBACK=80
-GO_SR_CHART_WINDOW=300
-GO_SR_CHART_MIN_STRENGTH=1
-```
-
-## Quality Gate
-
-CI runs on every push and pull request and requires:
-
-- `gofmt`
-- `go test ./...`
-- `go test -race ./...`
-- `go vet ./...`
-- `staticcheck ./...`
-- `golangci-lint run`
-- A high statement-coverage floor with the actual total reported
-- Fuzz smoke tests for aggregation and compute invariants
-
-## Contributing
-
-Issues and pull requests are welcome. See [`CONTRIBUTING.md`](CONTRIBUTING.md) before making a change, and use [`SECURITY.md`](SECURITY.md) for security reports.
-
-If you are using `go-sr` in a project, opening a discussion or issue with your use case is also useful feedback for the API.
-
-## License
-
-Apache-2.0. See [`LICENSE`](LICENSE).
