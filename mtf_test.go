@@ -230,11 +230,15 @@ func TestWarmupCandles_ModeAware(t *testing.T) {
 	if got := WarmupCandles(50, ModeZones); got != 68 {
 		t.Fatalf("zone warmup: got %d want 68", got)
 	}
-	if got := WarmupCandles(-10, ModeLegacy); got != 20 {
-		t.Fatalf("negative lookback should clamp to zero in legacy mode: got %d want 20", got)
-	}
-	if got := WarmupCandles(-10, ModeZones); got != 18 {
-		t.Fatalf("negative lookback should clamp to zero in zone mode: got %d want 18", got)
+}
+
+func TestWarmupCandles_NonPositiveLookbackReturnsZero(t *testing.T) {
+	for _, mode := range []Mode{ModeLegacy, ModeZones} {
+		for _, lookback := range []int{0, -10} {
+			if got := WarmupCandles(lookback, mode); got != 0 {
+				t.Fatalf("warmup for lookback %d mode %q: got %d want 0", lookback, mode, got)
+			}
+		}
 	}
 }
 
@@ -250,6 +254,16 @@ func TestRequiredKlineLimit_ModeAware(t *testing.T) {
 	}
 	if got := RequiredKlineLimit("1h", "1d", 1, ModeZones); got != 480 {
 		t.Fatalf("zone 1h->1d required limit: got %d want 480", got)
+	}
+}
+
+func TestRequiredKlineLimit_NonPositiveLookbackReturnsZero(t *testing.T) {
+	for _, mode := range []Mode{ModeLegacy, ModeZones} {
+		for _, lookback := range []int{0, -10} {
+			if got := RequiredKlineLimit("5m", "1h", lookback, mode); got != 0 {
+				t.Fatalf("required limit for lookback %d mode %q: got %d want 0", lookback, mode, got)
+			}
+		}
 	}
 }
 

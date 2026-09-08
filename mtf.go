@@ -29,14 +29,13 @@ func pivotWindowForMode(mode Mode) int {
 }
 
 // WarmupCandles returns the minimum closed-candle history needed before a
-// support/resistance calculation can be considered fully warmed up.
+// bounded support/resistance calculation can be considered fully warmed up.
+// It returns 0 when lookback <= 0 or mode is invalid because no finite warmup
+// size can be provided.
 func WarmupCandles(lookback int, mode Mode) int {
 	window := pivotWindowForMode(mode)
-	if window == 0 {
+	if window == 0 || lookback <= 0 {
 		return 0
-	}
-	if lookback < 0 {
-		lookback = 0
 	}
 	return lookback + 2*window + 10
 }
@@ -45,6 +44,8 @@ func WarmupCandles(lookback int, mode Mode) int {
 // bundle for targetInterval from a baseInterval stream. The returned size
 // includes alignment slack for UTC target buckets and one extra live candle
 // because exchange REST responses usually include the currently forming bar.
+// It returns 0 when no finite fetch size can be provided, including for a
+// non-positive lookback or invalid mode/interval combination.
 func RequiredKlineLimit(baseInterval, targetInterval string, lookback int, mode Mode) int {
 	baseDur := intervalDuration(baseInterval)
 	targetDur := intervalDuration(targetInterval)
