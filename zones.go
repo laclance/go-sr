@@ -12,6 +12,8 @@ func buildZones(pivots []srPivot, candles []Candle, lookback int) []Level {
 
 	window := newSRLookbackWindow(len(candles), lookback)
 	sorted := append([]srPivot(nil), pivots...)
+	// clusterPriceSortedPivots relies on this ordering so cluster members stay
+	// price-sorted and their price median can be read without copying/sorting.
 	sort.Slice(sorted, func(i, j int) bool {
 		if sorted[i].Price != sorted[j].Price {
 			return sorted[i].Price < sorted[j].Price
@@ -19,18 +21,7 @@ func buildZones(pivots []srPivot, candles []Candle, lookback int) []Level {
 		return sorted[i].Index < sorted[j].Index
 	})
 
-	clusters := [][]srPivot{{sorted[0]}}
-	for _, p := range sorted[1:] {
-		last := &clusters[len(clusters)-1]
-		clusterMedianPrice := medianPivotPrice(*last)
-		clusterMedianWidth := medianPivotWidth(*last)
-		threshold := math.Max(clusterMedianWidth, p.MergeWidth)
-		if math.Abs(p.Price-clusterMedianPrice) <= threshold {
-			*last = append(*last, p)
-			continue
-		}
-		clusters = append(clusters, []srPivot{p})
-	}
+	clusters := clusterPriceSortedPivots(sorted)
 
 	zones := make([]Level, 0, len(clusters))
 	for _, cluster := range clusters {
