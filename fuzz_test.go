@@ -7,14 +7,17 @@ import (
 )
 
 func FuzzAggregateCandlesToTimeframe(f *testing.F) {
+	minInt := -int(^uint(0)>>1) - 1
 	f.Add(12, int64(0))
 	f.Add(37, int64(5))
+	f.Add(minInt, int64(0))
 
 	f.Fuzz(func(t *testing.T, count int, offsetMinutes int64) {
+		count %= 180
 		if count < 0 {
 			count = -count
 		}
-		count = count%180 + 1
+		count++
 		offsetMinutes %= 60
 		if offsetMinutes < 0 {
 			offsetMinutes = -offsetMinutes
@@ -52,14 +55,17 @@ func FuzzAggregateCandlesToTimeframe(f *testing.F) {
 }
 
 func FuzzComputeInvariants(f *testing.F) {
+	minInt := -int(^uint(0)>>1) - 1
 	f.Add(120, int64(0), false)
 	f.Add(220, int64(11), true)
+	f.Add(minInt, int64(0), false)
 
 	f.Fuzz(func(t *testing.T, count int, phaseSeed int64, useLegacy bool) {
+		count %= 320
 		if count < 0 {
 			count = -count
 		}
-		count = count%320 + 1
+		count++
 
 		candles := fuzzComputeCandles(count, phaseSeed)
 
