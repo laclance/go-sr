@@ -241,7 +241,7 @@ GO_SR_CHART_MIN_STRENGTH=1
 
 ## Quality Gate
 
-CI runs on every push and pull request and requires:
+CI runs on pull requests and pushes to `main` and requires:
 
 - `gofmt`
 - `go test ./...`
