@@ -16,6 +16,6 @@
 - [ ] go test ./... passed
 - [ ] race tests passed where relevant
 - [ ] lint/vet passed
-- [ ] coverage did not decrease
+- [ ] coverage remains at or above the required floor
 - [ ] No unnecessary dependencies added
 - [ ] No lookahead bias introduced
