@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.13](https://github.com/laclance/go-sr/compare/v1.1.12...v1.1.13) (2026-09-08)
+
+
+### Bug Fixes
+
+* guard finite arithmetic and fuzz normalization ([#51](https://github.com/laclance/go-sr/issues/51)) ([b856069](https://github.com/laclance/go-sr/commit/b856069369055b7e98bef5b22a187ee2e5e0b9d9))
+
 ## [1.1.12](https://github.com/laclance/go-sr/compare/v1.1.11...v1.1.12) (2026-09-08)
 
 
