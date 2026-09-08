@@ -4,7 +4,7 @@ import "testing"
 
 func TestPivotMergeWidth_NegativePriceUsesMagnitudeFloor(t *testing.T) {
 	got := pivotMergeWidth(srPivot{Price: -100, ATRSnapshot: 0})
-	if got != 0.1 {
+	if !almostEqual(got, 0.1) {
 		t.Fatalf("expected magnitude-based price floor 0.1, got %v", got)
 	}
 }
@@ -16,7 +16,7 @@ func TestDetectZoneProximity_NegativePriceZeroWidthUsesMagnitudeFallback(t *test
 	if !nearSup || nearRes {
 		t.Fatalf("expected only nearby support for negative zero-width zone, got support=%t resistance=%t", nearSup, nearRes)
 	}
-	if nearestSup != -100.1 || supDist != 0.1 {
+	if nearestSup != -100.1 || !almostEqual(supDist, 0.1) {
 		t.Fatalf("unexpected nearest support result: price=%v distance=%v", nearestSup, supDist)
 	}
 }
