@@ -1,23 +1,6 @@
 package sr
 
-import "time"
-
-// srPivot holds per-swing data captured at pivot confirmation time. Keep its
-// fields identical to PivotInfo; pivotInfo relies on direct conversion.
-type srPivot struct {
-	Index             int
-	ConfirmedAtIndex  int
-	Time              time.Time
-	Price             float64
-	IsHigh            bool
-	Timeframe         string
-	ATRSnapshot       float64
-	AvgVolumeSnapshot float64
-	Volume            float64
-	VolumeRatio       float64
-	MergeWidth        float64
-	BounceATR         float64
-}
+type srPivot PivotInfo
 
 func findPivotHighs(candles []Candle, timeframe string, lookback int) []srPivot {
 	return findPivots(candles, timeframe, lookback, true)
