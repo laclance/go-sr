@@ -1,8 +1,10 @@
 # BBGO closed-kline adapter
 
-This example shows the adapter code that a BBGO strategy can use to feed closed 5m klines into `go-sr`. The source is intentionally excluded from this repository's build with `//go:build ignore`, so BBGO remains a dependency of the consuming strategy rather than the `go-sr` root module.
+This example shows the adapter code that a BBGO strategy can use to feed closed 5m klines into `go-sr`. The directory is an isolated Go module so CI can compile the real adapter against BBGO without making BBGO a dependency of the `go-sr` root module.
 
-Copy the relevant fields and methods from [`adapter.go`](adapter.go) into your BBGO strategy package, then remove the build constraint. If your strategy already defines `Strategy`, `Subscribe`, or `Run`, merge the shown fields and callback into those definitions instead of adding duplicates.
+The compatibility module pins BBGO v1.63.0 and uses the repository's current `go-sr` source through a local `replace` directive. From this directory, `go test ./...` compiles the adapter and its BBGO integration contract. Normal root-module commands such as `go test ./...` do not traverse this nested module.
+
+Copy the relevant fields and methods from [`adapter.go`](adapter.go) into your BBGO strategy package. If your strategy already defines `Strategy`, `Subscribe`, or `Run`, merge the shown fields and callback into those definitions instead of adding duplicates.
 
 The integration follows four rules:
 
@@ -17,4 +19,4 @@ The callback includes the newly closed kline in each computation. It must never 
 
 The result exposes `NearestSupport`, `NearestResistance`, `NearSupport`, and `NearResistance` for strategy decisions. A zero nearest price means no qualifying level was found on that side.
 
-This example is integration guidance, not a runnable package in `go-sr`. Build and run the adapted code from the BBGO module that owns your strategy and its BBGO dependency. BBGO is licensed under AGPL-3.0; review its license requirements for your use case.
+This remains integration guidance rather than a complete runnable BBGO strategy. BBGO is intentionally confined to this example module and is not a dependency of `github.com/laclance/go-sr`. BBGO is licensed under AGPL-3.0; review its license requirements for your use case.
