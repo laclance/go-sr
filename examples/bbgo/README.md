@@ -2,7 +2,7 @@
 
 This example shows the adapter code that a BBGO strategy can use to feed closed 5m klines into `go-sr`. The directory is an isolated Go module so CI can compile the real adapter against BBGO without making BBGO a dependency of the `go-sr` root module.
 
-The compatibility module pins BBGO v1.63.0 and uses the repository's current `go-sr` source through a local `replace` directive. From this directory, `go test ./...` compiles the adapter and its BBGO integration contract. Normal root-module commands such as `go test ./...` do not traverse this nested module.
+The compatibility module pins BBGO v1.64.2 and uses the repository's current `go-sr` source through a local `replace` directive. From this directory, `go test ./...` compiles the adapter and its BBGO integration contract. Normal root-module commands such as `go test ./...` do not traverse this nested module.
 
 Copy the relevant fields and methods from [`adapter.go`](adapter.go) into your BBGO strategy package. If your strategy already defines `Strategy`, `Subscribe`, or `Run`, merge the shown fields and callback into those definitions instead of adding duplicates.
 
