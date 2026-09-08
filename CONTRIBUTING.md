@@ -10,12 +10,13 @@ cd go-sr
 go test ./...
 ```
 
-Install optional analysis tools if they are not already available:
+Static analysis uses Staticcheck and golangci-lint. CI pins the exact analyzer versions; use [`.github/workflows/ci.yml`](.github/workflows/ci.yml) when you need to reproduce those pins locally.
 
-```bash
-go install honnef.co/go/tools/cmd/staticcheck@2024.1.1
-go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.64.8
-```
+## Go Version Policy
+
+`go.mod` declares the minimum supported Go version. CI runs the normal test suite on that minimum version and on the current stable Go release. The heavier race and static-analysis quality gate runs once on current stable Go so tool versions are not constrained by the compatibility floor.
+
+Do not raise the `go.mod` minimum solely to accommodate development tooling.
 
 ## Tests and Quality Gate
 

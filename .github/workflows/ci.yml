@@ -10,25 +10,47 @@ permissions:
   contents: read
 
 jobs:
-  test:
-    name: Quality Gate
+  compatibility:
+    name: Minimum Go Compatibility
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
         uses: actions/checkout@v7
 
-      - name: Set up Go
+      - name: Set up minimum Go
         uses: actions/setup-go@v7
         with:
           go-version-file: go.mod
           cache: true
 
+      - name: Show Go version
+        run: go version
+
+      - name: Test
+        run: go test ./...
+
+  quality:
+    name: Current Go Quality Gate
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up current Go
+        uses: actions/setup-go@v7
+        with:
+          go-version: 'stable'
+          cache: true
+
+      - name: Show Go version
+        run: go version
+
       - name: Install analysis tools
         run: |
-          # This module targets Go 1.23.2; newer Staticcheck release lines require newer Go toolchains.
-          go install honnef.co/go/tools/cmd/staticcheck@2024.1.1
-          go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.64.8
+          go install honnef.co/go/tools/cmd/staticcheck@2026.2.1
+          go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.13.2
 
       - name: Check formatting
         run: test -z "$(gofmt -l .)"
