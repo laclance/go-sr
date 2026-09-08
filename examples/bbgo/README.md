@@ -9,7 +9,9 @@ The integration follows four rules:
 1. Subscribe to BBGO's 5m kline channel.
 2. Append data only inside `MarketDataStream.OnKLineClosed(func(kline types.KLine))` and defensively reject any event whose `Closed` flag is false.
 3. Convert BBGO timestamps with `.Time()` and fixed-point OHLCV values with `.Float64()`.
-4. Keep at most 240 closed candles, wait for the 120-candle lookback, and then call `sr.Compute` in zone mode.
+4. Keep at most 240 closed candles, use `Lookback: lookback` for the S/R scan window, and wait until `sr.WarmupCandles(lookback, sr.ModeZones)` closed candles are available before calling `sr.Compute`.
+
+The 120-candle `Lookback` controls how much history the S/R calculation scans; it is not the readiness threshold. `WarmupCandles` determines when enough closed history exists for a fully warmed calculation in the selected mode. For REST bootstrap sizing or higher-timeframe aggregation, use `sr.RequiredKlineLimit` rather than duplicating the warmup and alignment math.
 
 The callback includes the newly closed kline in each computation. It must never append the current still-open kline: do not build this slice from `OnKLine`, a live-kline cache, or a REST response that includes an unfinished final candle.
 
