@@ -2,6 +2,7 @@ package sr
 
 import (
 	"fmt"
+	"math"
 	"strconv"
 	"time"
 )
@@ -34,10 +35,15 @@ func pivotWindowForMode(mode Mode) int {
 // size can be provided.
 func WarmupCandles(lookback int, mode Mode) int {
 	window := pivotWindowForMode(mode)
-	if window == 0 || lookback <= 0 {
+	if window == 0 || lookback <= 0 || window > (math.MaxInt-10)/2 {
 		return 0
 	}
-	return lookback + 2*window + 10
+
+	extra := 2*window + 10
+	if lookback > math.MaxInt-extra {
+		return 0
+	}
+	return lookback + extra
 }
 
 // RequiredKlineLimit returns the raw kline fetch size needed to build an S/R
@@ -58,9 +64,16 @@ func RequiredKlineLimit(baseInterval, targetInterval string, lookback int, mode 
 		return 0
 	}
 
-	ratio := int(targetDur / baseDur)
-	closedRequired := warmup*ratio + (ratio - 1)
-	return closedRequired + 1
+	ratioDur := targetDur / baseDur
+	if ratioDur > time.Duration(math.MaxInt) || warmup == math.MaxInt {
+		return 0
+	}
+	ratio := int(ratioDur)
+	requiredPerRatio := warmup + 1
+	if requiredPerRatio > math.MaxInt/ratio {
+		return 0
+	}
+	return requiredPerRatio * ratio
 }
 
 // AggregateCandlesToTimeframe rolls a closed-candle slice into a higher
@@ -73,7 +86,11 @@ func AggregateCandlesToTimeframe(candles []Candle, fromInterval, toInterval stri
 		return nil
 	}
 
-	bucketSize := int(toDur / fromDur)
+	bucketSizeDur := toDur / fromDur
+	if bucketSizeDur > time.Duration(math.MaxInt) {
+		return nil
+	}
+	bucketSize := int(bucketSizeDur)
 	type bucket struct {
 		start   time.Time
 		end     time.Time
@@ -121,14 +138,17 @@ func AggregateCandlesToTimeframe(candles []Candle, fromInterval, toInterval stri
 	}
 
 	for _, candle := range candles {
-		bucketStart := aggregateBucketStart(candle.OpenTime, toDur)
+		bucketStart, ok := aggregateBucketStart(candle.OpenTime, toDur)
+		if !ok {
+			return nil
+		}
 		bucketEnd := bucketStart.Add(toDur)
 		if current == nil || !current.start.Equal(bucketStart) {
 			flush()
 			current = &bucket{
 				start: bucketStart,
 				end:   bucketEnd,
-				seen:  make(map[time.Time]struct{}, bucketSize),
+				seen:  make(map[time.Time]struct{}),
 			}
 		}
 		openTime := candle.OpenTime.UTC()
@@ -145,14 +165,21 @@ func AggregateCandlesToTimeframe(candles []Candle, fromInterval, toInterval stri
 
 // aggregateBucketStart floors an open time to the fixed UTC bucket grid whose
 // origin is the Unix epoch.
-func aggregateBucketStart(openTime time.Time, bucketDur time.Duration) time.Time {
+func aggregateBucketStart(openTime time.Time, bucketDur time.Duration) (time.Time, bool) {
 	bucketSeconds := int64(bucketDur / time.Second)
+	if bucketSeconds <= 0 {
+		return time.Time{}, false
+	}
+
 	unixSeconds := openTime.UTC().Unix()
 	remainder := unixSeconds % bucketSeconds
 	if remainder < 0 {
 		remainder += bucketSeconds
 	}
-	return time.Unix(unixSeconds-remainder, 0).UTC()
+	if remainder > 0 && unixSeconds < math.MinInt64+remainder {
+		return time.Time{}, false
+	}
+	return time.Unix(unixSeconds-remainder, 0).UTC(), true
 }
 
 func intervalDuration(interval string) time.Duration {
@@ -166,14 +193,20 @@ func intervalDuration(interval string) time.Duration {
 		return 0
 	}
 
+	var unitDur time.Duration
 	switch unit {
 	case 'm':
-		return time.Duration(n) * time.Minute
+		unitDur = time.Minute
 	case 'h':
-		return time.Duration(n) * time.Hour
+		unitDur = time.Hour
 	case 'd':
-		return time.Duration(n) * 24 * time.Hour
+		unitDur = 24 * time.Hour
 	default:
 		return 0
 	}
+
+	if int64(n) > math.MaxInt64/int64(unitDur) {
+		return 0
+	}
+	return time.Duration(int64(n) * int64(unitDur))
 }
