@@ -26,7 +26,7 @@ func computeSRLegacy(candles []Candle, timeframe string, lookback int, tolerance
 	}
 
 	lastClose := candles[n-1].Close
-	tolAbs := lastClose * tolerance
+	tolAbs := math.Abs(lastClose) * tolerance
 
 	var highs, lows []float64
 	for i := start; i < end; i++ {
