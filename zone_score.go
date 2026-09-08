@@ -44,6 +44,10 @@ func countFalseBreaks(zone Level, candles []Candle, zoneEstablishedAt int) int {
 			if reentry := findZoneReentry(candles, i, zone.Top, true); reentry >= 0 {
 				count++
 				i = reentry
+				continue
+			}
+			for i+1 < len(candles) && candles[i+1].Close > zone.Top {
+				i++
 			}
 			continue
 		}
@@ -54,6 +58,10 @@ func countFalseBreaks(zone Level, candles []Candle, zoneEstablishedAt int) int {
 		if reentry := findZoneReentry(candles, i, zone.Bottom, false); reentry >= 0 {
 			count++
 			i = reentry
+			continue
+		}
+		for i+1 < len(candles) && candles[i+1].Close < zone.Bottom {
+			i++
 		}
 	}
 	return count
