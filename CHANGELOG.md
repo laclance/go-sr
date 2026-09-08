@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.2](https://github.com/laclance/go-sr/compare/v1.1.1...v1.1.2) (2026-09-08)
+
+
+### Bug Fixes
+
+* align lookback and invalid mode semantics ([#15](https://github.com/laclance/go-sr/issues/15)) ([8541b9f](https://github.com/laclance/go-sr/commit/8541b9fe92bd9c084a5d386468f29604a3b76ffb))
+
 ## [1.1.1](https://github.com/laclance/go-sr/compare/v1.1.0...v1.1.1) (2026-09-08)
 
 
