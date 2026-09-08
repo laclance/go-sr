@@ -64,8 +64,8 @@ func RequiredKlineLimit(baseInterval, targetInterval string, lookback int, mode 
 }
 
 // AggregateCandlesToTimeframe rolls a closed-candle slice into a higher
-// timeframe using UTC-aligned buckets. Any leading or trailing partial bucket
-// is dropped.
+// timeframe using fixed-duration UTC buckets anchored at 1970-01-01T00:00:00Z.
+// Any leading or trailing partial bucket is dropped.
 func AggregateCandlesToTimeframe(candles []Candle, fromInterval, toInterval string) []Candle {
 	fromDur := intervalDuration(fromInterval)
 	toDur := intervalDuration(toInterval)
@@ -121,7 +121,7 @@ func AggregateCandlesToTimeframe(candles []Candle, fromInterval, toInterval stri
 	}
 
 	for _, candle := range candles {
-		bucketStart := candle.OpenTime.UTC().Truncate(toDur)
+		bucketStart := aggregateBucketStart(candle.OpenTime, toDur)
 		bucketEnd := bucketStart.Add(toDur)
 		if current == nil || !current.start.Equal(bucketStart) {
 			flush()
@@ -141,6 +141,18 @@ func AggregateCandlesToTimeframe(candles []Candle, fromInterval, toInterval stri
 	flush()
 
 	return out
+}
+
+// aggregateBucketStart floors an open time to the fixed UTC bucket grid whose
+// origin is the Unix epoch.
+func aggregateBucketStart(openTime time.Time, bucketDur time.Duration) time.Time {
+	bucketSeconds := int64(bucketDur / time.Second)
+	unixSeconds := openTime.UTC().Unix()
+	remainder := unixSeconds % bucketSeconds
+	if remainder < 0 {
+		remainder += bucketSeconds
+	}
+	return time.Unix(unixSeconds-remainder, 0).UTC()
 }
 
 func intervalDuration(interval string) time.Duration {
