@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/laclance/go-sr/actions/workflows/ci.yml/badge.svg)](https://github.com/laclance/go-sr/actions/workflows/ci.yml)
 [![Go Reference](https://pkg.go.dev/badge/github.com/laclance/go-sr.svg)](https://pkg.go.dev/github.com/laclance/go-sr)
-[![License: Apache-2.0](https://img.shields.io/badge/Apache_2.0-blue.svg)](LICENSE)
+[![License: Apache-2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 
 **Deterministic, no-lookahead support/resistance detection for Go trading systems.**
 
@@ -217,3 +217,47 @@ This module intentionally does **not** own:
 - Order execution
 
 Keeping exchange and strategy concerns outside the package makes `go-sr` usable across backtest engines, bots, and brokers.
+
+## Manual Chart Inspection
+
+The repository includes a BTC fixture and an HTML chart generator for visually inspecting detected zones:
+
+```bash
+GO_SR_CHART=/tmp/go-sr-btc-5m.html \
+  go test -run TestGenerateManualSRChart -count=1 -v
+
+xdg-open /tmp/go-sr-btc-5m.html
+```
+
+Optional overrides:
+
+```bash
+GO_SR_CHART_TIMEFRAME=15m
+GO_SR_CHART_MODE=legacy
+GO_SR_CHART_LOOKBACK=80
+GO_SR_CHART_WINDOW=300
+GO_SR_CHART_MIN_STRENGTH=1
+```
+
+## Quality Gate
+
+CI runs on every push and pull request and requires:
+
+- `gofmt`
+- `go test ./...`
+- `go test -race ./...`
+- `go vet ./...`
+- `staticcheck ./...`
+- `golangci-lint run`
+- A high statement-coverage floor with the actual total reported
+- Fuzz smoke tests for aggregation and compute invariants
+
+## Contributing
+
+Issues and pull requests are welcome. See [`CONTRIBUTING.md`](CONTRIBUTING.md) before making a change, and use [`SECURITY.md`](SECURITY.md) for security reports.
+
+If you are using `go-sr` in a project, opening a discussion or issue with your use case is also useful feedback for the API.
+
+## License
+
+Apache-2.0. See [`LICENSE`](LICENSE).
