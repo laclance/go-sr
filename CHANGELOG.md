@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.11](https://github.com/laclance/go-sr/compare/v1.1.10...v1.1.11) (2026-09-08)
+
+
+### Bug Fixes
+
+* handle negative prices in percentage tolerances ([#43](https://github.com/laclance/go-sr/issues/43)) ([98a7560](https://github.com/laclance/go-sr/commit/98a75602fc3300268919d60a1097bca989a93323))
+
 ## [1.1.10](https://github.com/laclance/go-sr/compare/v1.1.9...v1.1.10) (2026-09-08)
 
 
