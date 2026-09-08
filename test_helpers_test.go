@@ -131,55 +131,6 @@ func buildSRCategoryCandles() []Candle {
 	return candles
 }
 
-// buildRealisticCandles creates a series with enough variation to trigger SR detection.
-func buildRealisticCandles(n int) []Candle {
-	candles := make([]Candle, n)
-	t0 := time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)
-	price := 50000.0
-	for i := 0; i < n; i++ {
-		phase := i % 60
-		var delta float64
-		switch {
-		case phase < 20:
-			delta = 30 + float64(i%7)*5
-		case phase < 30:
-			delta = -10 + float64(i%5)*2
-		case phase < 50:
-			delta = -25 - float64(i%6)*4
-		default:
-			delta = float64(i%9)*3 - 10
-		}
-		price += delta
-		if price < 30000 {
-			price = 30000
-		}
-
-		body := 50 + float64(i%10)*10
-		wick := 20 + float64(i%7)*5
-
-		var open, close_ float64
-		if i%3 != 0 {
-			open = price - body/2
-			close_ = price + body/2
-		} else {
-			open = price + body/2
-			close_ = price - body/2
-		}
-
-		candles[i] = Candle{
-			OpenTime:  t0,
-			CloseTime: t0.Add(5 * time.Minute),
-			Open:      open,
-			High:      math.Max(open, close_) + wick,
-			Low:       math.Min(open, close_) - wick,
-			Close:     close_,
-			Volume:    1000 + float64(i%20)*100,
-		}
-		t0 = t0.Add(5 * time.Minute)
-	}
-	return candles
-}
-
 // makeFlatCandles builds n identical flat candles ending at closeTime.
 func makeFlatCandles(n int, basePrice float64, closeTime time.Time) []Candle {
 	candles := make([]Candle, n)
