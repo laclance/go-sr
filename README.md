@@ -197,7 +197,7 @@ See the standalone program in [`examples/basic`](examples/basic), runnable packa
 - Callers must exclude still-open candles before passing data to `AggregateCandlesToTimeframe` or `Compute`.
 - Supported interval strings use `<n><unit>` with `m`, `h`, or `d`; the target interval must be larger than and evenly divisible by the base interval.
 - `NearSupport` / `NearResistance` describe whether the nearest level on each side is within the mode-specific near threshold.
-- In zone mode, the near threshold is `2 ×` the zone half-width; zero-width zones fall back to `0.1%` of the current price.
+- In zone mode, the near threshold is `2 ×` the zone half-width; zero-width zones fall back to `0.1%` of the absolute current price.
 - In legacy mode, the near threshold is `Tolerance × close`.
 
 ## Scope
