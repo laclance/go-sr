@@ -19,7 +19,10 @@ func normalizeMode(mode Mode) (Mode, error) {
 
 func pivotWindowForMode(mode Mode) int {
 	normalized, err := normalizeMode(mode)
-	if err == nil && normalized == ModeZones {
+	if err != nil {
+		return 0
+	}
+	if normalized == ModeZones {
 		return pivotWindow
 	}
 	return legacyPivotWindow
@@ -28,10 +31,14 @@ func pivotWindowForMode(mode Mode) int {
 // WarmupCandles returns the minimum closed-candle history needed before a
 // support/resistance calculation can be considered fully warmed up.
 func WarmupCandles(lookback int, mode Mode) int {
+	window := pivotWindowForMode(mode)
+	if window == 0 {
+		return 0
+	}
 	if lookback < 0 {
 		lookback = 0
 	}
-	return lookback + 2*pivotWindowForMode(mode) + 10
+	return lookback + 2*window + 10
 }
 
 // RequiredKlineLimit returns the raw kline fetch size needed to build an S/R
@@ -45,8 +52,13 @@ func RequiredKlineLimit(baseInterval, targetInterval string, lookback int, mode 
 		return 0
 	}
 
+	warmup := WarmupCandles(lookback, mode)
+	if warmup == 0 {
+		return 0
+	}
+
 	ratio := int(targetDur / baseDur)
-	closedRequired := WarmupCandles(lookback, mode)*ratio + (ratio - 1)
+	closedRequired := warmup*ratio + (ratio - 1)
 	return closedRequired + 1
 }
 

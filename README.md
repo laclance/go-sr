@@ -188,7 +188,8 @@ See the standalone program in [`examples/basic`](examples/basic), runnable packa
 ## Behavioral Contract
 
 - `Compute` is deterministic for the same candle prefix and options.
-- `Compute` returns an empty level bundle and an error for an unknown `Mode`.
+- `Options.Lookback <= 0` uses all supplied candle history in both modes.
+- Unknown modes cause `Compute` to return `EmptyLevels(opts.Timeframe)` plus an error; `WarmupCandles` and `RequiredKlineLimit` return `0` because their signatures cannot return errors.
 - Zone-mode pivots are confirmation-based; no future candles are read beyond the current prefix.
 - `AggregateCandlesToTimeframe` uses UTC-aligned buckets and drops leading/trailing partial buckets.
 - `RequiredKlineLimit` includes enough raw candles to preserve the higher-timeframe warmup after UTC alignment, plus one potentially live candle for exchange REST responses.
