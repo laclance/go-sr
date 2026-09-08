@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.4](https://github.com/laclance/go-sr/compare/v1.1.3...v1.1.4) (2026-09-08)
+
+
+### Bug Fixes
+
+* recheck zone dedupe replacement chains ([#25](https://github.com/laclance/go-sr/issues/25)) ([28df521](https://github.com/laclance/go-sr/commit/28df521c7c93aa505deb44460937bcb905b3df64))
+
 ## [1.1.3](https://github.com/laclance/go-sr/compare/v1.1.2...v1.1.3) (2026-09-08)
 
 
