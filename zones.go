@@ -130,6 +130,13 @@ func dedupeZonesBySide(zones []Level) []Level {
 		if zonesOverlap(*last, z) {
 			if preferZoneForDedup(z, *last) {
 				*last = cloneSRLevel(z)
+				for len(deduped) > 1 && zonesOverlap(deduped[len(deduped)-2], deduped[len(deduped)-1]) {
+					candidateIndex := len(deduped) - 1
+					if preferZoneForDedup(deduped[candidateIndex], deduped[candidateIndex-1]) {
+						deduped[candidateIndex-1] = deduped[candidateIndex]
+					}
+					deduped = deduped[:candidateIndex]
+				}
 			}
 			continue
 		}
