@@ -156,6 +156,8 @@ warmup := sr.WarmupCandles(50, sr.ModeZones)
 limit := sr.RequiredKlineLimit("5m", "1h", 50, sr.ModeZones)
 ```
 
+`RequiredKlineLimit` includes enough slack for UTC target-bucket alignment plus one potentially live final candle. Exclude that still-open candle before calling `AggregateCandlesToTimeframe` or `Compute`; both APIs expect closed candles.
+
 ## Public API
 
 ```go
@@ -189,7 +191,8 @@ See the standalone program in [`examples/basic`](examples/basic), runnable packa
 - `Compute` returns an empty level bundle and an error for an unknown `Mode`.
 - Zone-mode pivots are confirmation-based; no future candles are read beyond the current prefix.
 - `AggregateCandlesToTimeframe` uses UTC-aligned buckets and drops leading/trailing partial buckets.
-- `RequiredKlineLimit` returns the raw-candle count needed to build a higher-timeframe S/R bundle and includes one extra live candle for exchange REST responses.
+- `RequiredKlineLimit` includes enough raw candles to preserve the higher-timeframe warmup after UTC alignment, plus one potentially live candle for exchange REST responses.
+- Callers must exclude still-open candles before passing data to `AggregateCandlesToTimeframe` or `Compute`.
 - Supported interval strings use `<n><unit>` with `m`, `h`, or `d`; the target interval must be larger than and evenly divisible by the base interval.
 - `NearSupport` / `NearResistance` describe whether the nearest level on each side is within the mode-specific near threshold.
 - In zone mode, the near threshold is `2 ×` the zone half-width; zero-width zones fall back to `0.1%` of the current price.
