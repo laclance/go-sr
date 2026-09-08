@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.7](https://github.com/laclance/go-sr/compare/v1.1.6...v1.1.7) (2026-09-08)
+
+
+### Bug Fixes
+
+* anchor multi-timeframe buckets at Unix epoch ([#34](https://github.com/laclance/go-sr/issues/34)) ([29c9eab](https://github.com/laclance/go-sr/commit/29c9eab97d2e5ddd8ea061adf8213ec0a5eb05b8))
+
 ## [1.1.6](https://github.com/laclance/go-sr/compare/v1.1.5...v1.1.6) (2026-09-08)
 
 
