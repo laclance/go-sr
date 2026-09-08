@@ -7,6 +7,12 @@
 // nearest support/resistance prices, distances, strengths, scores, and proximity
 // flags suitable for strategy logic.
 //
+// Callers are responsible for supplying valid candle series. Candles passed to
+// Compute or aggregation helpers must be closed/finalized, ordered
+// chronologically ascending by OpenTime, contain finite OHLCV values, and
+// otherwise represent valid candles for the source market/feed. The package
+// does not perform broad input validation.
+//
 // Two compute modes are supported:
 //   - ModeLegacy: line-based pivots with fixed-tolerance proximity
 //   - ModeZones: zone-based detection with composite scoring and raw/qualified output
