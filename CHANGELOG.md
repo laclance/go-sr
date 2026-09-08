@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.12](https://github.com/laclance/go-sr/compare/v1.1.11...v1.1.12) (2026-09-08)
+
+
+### Performance Improvements
+
+* reduce pathological zone clustering cost ([#45](https://github.com/laclance/go-sr/issues/45)) ([11e0082](https://github.com/laclance/go-sr/commit/11e0082c583c29b8b9d8436ac8e34d191b696b8b))
+
 ## [1.1.11](https://github.com/laclance/go-sr/compare/v1.1.10...v1.1.11) (2026-09-08)
 
 
