@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.6](https://github.com/laclance/go-sr/compare/v1.1.5...v1.1.6) (2026-09-08)
+
+
+### Bug Fixes
+
+* make all-history sizing helpers truthful ([#32](https://github.com/laclance/go-sr/issues/32)) ([661e2c3](https://github.com/laclance/go-sr/commit/661e2c3c17b9a96b92aea46e97267fc2f1a69e06))
+
 ## [1.1.5](https://github.com/laclance/go-sr/compare/v1.1.4...v1.1.5) (2026-09-08)
 
 
