@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/laclance/go-sr/actions/workflows/ci.yml/badge.svg)](https://github.com/laclance/go-sr/actions/workflows/ci.yml)
 [![Go Reference](https://pkg.go.dev/badge/github.com/laclance/go-sr.svg)](https://pkg.go.dev/github.com/laclance/go-sr)
-[![License: Apache-2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
+[![License: Apache-2.0](https://img.shields.io/badge/Apache_2.0-blue.svg)](LICENSE)
 
 **Deterministic, no-lookahead support/resistance detection for Go trading systems.**
 
@@ -149,14 +149,14 @@ levels15m, err := sr.Compute(candles15m, sr.Options{
 })
 ```
 
-Helpers are also available for calculating warmup and exchange-fetch requirements:
+Helpers are also available for calculating warmup and exchange-fetch requirements for a finite lookback:
 
 ```go
 warmup := sr.WarmupCandles(50, sr.ModeZones)
 limit := sr.RequiredKlineLimit("5m", "1h", 50, sr.ModeZones)
 ```
 
-`RequiredKlineLimit` includes enough slack for UTC target-bucket alignment plus one potentially live final candle. Exclude that still-open candle before calling `AggregateCandlesToTimeframe` or `Compute`; both APIs expect closed candles.
+`WarmupCandles` and `RequiredKlineLimit` return `0` when `lookback <= 0` because an all-supplied-history calculation has no finite warmup/fetch size. For bounded lookbacks, `RequiredKlineLimit` includes enough slack for UTC target-bucket alignment plus one potentially live final candle. Exclude that still-open candle before calling `AggregateCandlesToTimeframe` or `Compute`; both APIs expect closed candles.
 
 ## Public API
 
@@ -189,10 +189,11 @@ See the standalone program in [`examples/basic`](examples/basic), runnable packa
 
 - `Compute` is deterministic for the same candle prefix and options.
 - `Options.Lookback <= 0` uses all supplied candle history in both modes.
-- Unknown modes cause `Compute` to return `EmptyLevels(opts.Timeframe)` plus an error; `WarmupCandles` and `RequiredKlineLimit` return `0` because their signatures cannot return errors.
+- Unknown modes cause `Compute` to return `EmptyLevels(opts.Timeframe)` plus an error.
+- `WarmupCandles` and `RequiredKlineLimit` require a positive, bounded lookback and return `0` when a finite size cannot be provided, including for non-positive lookbacks and existing invalid-input cases.
 - Zone-mode pivots are confirmation-based; no future candles are read beyond the current prefix.
 - `AggregateCandlesToTimeframe` uses UTC-aligned buckets and drops leading/trailing partial buckets.
-- `RequiredKlineLimit` includes enough raw candles to preserve the higher-timeframe warmup after UTC alignment, plus one potentially live candle for exchange REST responses.
+- For positive lookbacks, `RequiredKlineLimit` includes enough raw candles to preserve the higher-timeframe warmup after UTC alignment, plus one potentially live candle for exchange REST responses.
 - Callers must exclude still-open candles before passing data to `AggregateCandlesToTimeframe` or `Compute`.
 - Supported interval strings use `<n><unit>` with `m`, `h`, or `d`; the target interval must be larger than and evenly divisible by the base interval.
 - `NearSupport` / `NearResistance` describe whether the nearest level on each side is within the mode-specific near threshold.
