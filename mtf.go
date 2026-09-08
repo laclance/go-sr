@@ -36,8 +36,8 @@ func WarmupCandles(lookback int, mode Mode) int {
 
 // RequiredKlineLimit returns the raw kline fetch size needed to build an S/R
 // bundle for targetInterval from a baseInterval stream. The returned size
-// includes one extra live candle because exchange REST responses usually
-// include the currently forming bar.
+// includes alignment slack for UTC target buckets and one extra live candle
+// because exchange REST responses usually include the currently forming bar.
 func RequiredKlineLimit(baseInterval, targetInterval string, lookback int, mode Mode) int {
 	baseDur := intervalDuration(baseInterval)
 	targetDur := intervalDuration(targetInterval)
@@ -45,7 +45,8 @@ func RequiredKlineLimit(baseInterval, targetInterval string, lookback int, mode 
 		return 0
 	}
 
-	closedRequired := WarmupCandles(lookback, mode) * int(targetDur/baseDur)
+	ratio := int(targetDur / baseDur)
+	closedRequired := WarmupCandles(lookback, mode)*ratio + (ratio - 1)
 	return closedRequired + 1
 }
 
