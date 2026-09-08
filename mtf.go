@@ -18,15 +18,17 @@ func normalizeMode(mode Mode) (Mode, error) {
 	}
 }
 
-func pivotWindowForMode(mode Mode) int {
+func warmupPaddingForMode(mode Mode) int {
 	normalized, err := normalizeMode(mode)
 	if err != nil {
 		return 0
 	}
-	if normalized == ModeZones {
-		return pivotWindow
+	if normalized == ModeLegacy {
+		return legacyPivotWindow
 	}
-	return legacyPivotWindow
+
+	indicatorHistory := max(rsiPeriod, avgVolPeriod) - pivotWindow
+	return max(pivotWindow, indicatorHistory)
 }
 
 // WarmupCandles returns the minimum closed-candle history needed before a
@@ -34,16 +36,11 @@ func pivotWindowForMode(mode Mode) int {
 // It returns 0 when lookback <= 0 or mode is invalid because no finite warmup
 // size can be provided.
 func WarmupCandles(lookback int, mode Mode) int {
-	window := pivotWindowForMode(mode)
-	if window == 0 || lookback <= 0 || window > (math.MaxInt-10)/2 {
+	padding := warmupPaddingForMode(mode)
+	if padding <= 0 || lookback <= 0 || lookback > math.MaxInt-padding {
 		return 0
 	}
-
-	extra := 2*window + 10
-	if lookback > math.MaxInt-extra {
-		return 0
-	}
-	return lookback + extra
+	return lookback + padding
 }
 
 // RequiredKlineLimit returns the raw kline fetch size needed to build an S/R
