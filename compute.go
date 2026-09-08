@@ -13,16 +13,22 @@ func Compute(candles []Candle, opts Options) (Levels, error) {
 		return EmptyLevels(opts.Timeframe), err
 	}
 
+	var levels Levels
 	switch mode {
 	case ModeZones:
-		return computeZones(candles, opts.Timeframe, opts.Lookback, opts.MinStrength), nil
+		levels = computeZones(candles, opts.Timeframe, opts.Lookback, opts.MinStrength)
 	default:
 		tolerance := opts.Tolerance
 		if tolerance <= 0 {
 			tolerance = 0.002
 		}
-		return computeSRLegacy(candles, opts.Timeframe, opts.Lookback, tolerance), nil
+		levels = computeSRLegacy(candles, opts.Timeframe, opts.Lookback, tolerance)
 	}
+
+	if err := validateFiniteLevels(levels); err != nil {
+		return EmptyLevels(opts.Timeframe), err
+	}
+	return levels, nil
 }
 
 // EmptyLevels returns the zero-value bundle for a timeframe label.
