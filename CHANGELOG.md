@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.8](https://github.com/laclance/go-sr/compare/v1.1.7...v1.1.8) (2026-09-08)
+
+
+### Bug Fixes
+
+* anchor false-break reentry windows ([#37](https://github.com/laclance/go-sr/issues/37)) ([8e19dfe](https://github.com/laclance/go-sr/commit/8e19dfe53f2722be4e56ff8a41d1dce12afbb01e))
+
 ## [1.1.7](https://github.com/laclance/go-sr/compare/v1.1.6...v1.1.7) (2026-09-08)
 
 
