@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.9](https://github.com/laclance/go-sr/compare/v1.1.8...v1.1.9) (2026-09-08)
+
+
+### Bug Fixes
+
+* guard multi-timeframe arithmetic overflow ([#39](https://github.com/laclance/go-sr/issues/39)) ([898e0a9](https://github.com/laclance/go-sr/commit/898e0a95b7213b81d067ae2f78ed2052f95f9bb1))
+
 ## [1.1.8](https://github.com/laclance/go-sr/compare/v1.1.7...v1.1.8) (2026-09-08)
 
 
