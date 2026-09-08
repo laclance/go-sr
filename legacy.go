@@ -12,6 +12,9 @@ func computeSRLegacy(candles []Candle, timeframe string, lookback int, tolerance
 	if tolerance <= 0 {
 		tolerance = 0.002
 	}
+	if lookback <= 0 {
+		lookback = n
+	}
 
 	start := n - lookback
 	if start < legacyPivotWindow {
