@@ -14,7 +14,7 @@
 - Nearest support/resistance metadata for strategy logic
 - Multi-timeframe candle aggregation and sizing helpers
 - No third-party runtime dependencies
-- CI with race detection, static analysis, 100% statement coverage, and fuzz smoke tests
+- CI with race detection, static analysis, a high statement-coverage floor, and fuzz smoke tests
 
 ## Example
 
@@ -248,7 +248,7 @@ CI runs on every push and pull request and requires:
 - `go vet ./...`
 - `staticcheck ./...`
 - `golangci-lint run`
-- `100.0%` statement coverage
+- A high statement-coverage floor with the actual total reported
 - Fuzz smoke tests for aggregation and compute invariants
 
 ## Contributing

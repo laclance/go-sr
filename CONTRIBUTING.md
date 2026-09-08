@@ -35,7 +35,7 @@ go test -run=^$ -fuzz=FuzzAggregateCandlesToTimeframe -fuzztime=5s
 go test -run=^$ -fuzz=FuzzComputeInvariants -fuzztime=5s
 ```
 
-Run `gofmt -w .` first if the formatting check prints files. Coverage must stay at the documented `100.0%` statement coverage target.
+Run `gofmt -w .` first if the formatting check prints files. CI requires at least 95% statement coverage and reports the actual total. Keep tests focused on meaningful behavior, edge cases, regressions, and invariants rather than coverage alone.
 
 ## Issues
 

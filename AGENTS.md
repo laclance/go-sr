@@ -16,9 +16,7 @@
 
 ## Required Checks Before PR
 
-Follow the local quality-gate commands in [`CONTRIBUTING.md`](CONTRIBUTING.md). CI is authoritative for exact analyzer versions and verifies both the minimum Go version declared by `go.mod` and the current stable Go release.
-
-Coverage must remain at the documented `100.0%` statement coverage target.
+Follow the local quality-gate commands and coverage policy in [`CONTRIBUTING.md`](CONTRIBUTING.md). CI is authoritative for exact analyzer versions and verifies both the minimum Go version declared by `go.mod` and the current stable Go release.
 
 ## Commit Style
 
