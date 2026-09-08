@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.3](https://github.com/laclance/go-sr/compare/v1.1.2...v1.1.3) (2026-09-08)
+
+
+### Bug Fixes
+
+* use warmup helper in BBGO example ([#18](https://github.com/laclance/go-sr/issues/18)) ([d0d176f](https://github.com/laclance/go-sr/commit/d0d176f0e08f94e91c3349b04de3922773fbd05f))
+
 ## [1.1.2](https://github.com/laclance/go-sr/compare/v1.1.1...v1.1.2) (2026-09-08)
 
 
