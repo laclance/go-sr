@@ -38,6 +38,7 @@ func (s *Strategy) Run(
 ) error {
 	// Fix the capacity up front so this slice cannot grow beyond the bound below.
 	s.closedCandles = make([]sr.Candle, 0, maxClosedCandles)
+	warmup := sr.WarmupCandles(lookback, sr.ModeZones)
 
 	session.MarketDataStream.OnKLineClosed(func(kline types.KLine) {
 		if kline.Symbol != s.Symbol || kline.Interval != types.Interval(timeframe) {
@@ -53,13 +54,13 @@ func (s *Strategy) Run(
 			s.closedCandles,
 			candleFromBBGO(kline),
 		)
-		if len(s.closedCandles) < lookback {
+		if len(s.closedCandles) < warmup {
 			return
 		}
 
 		levels, err := sr.Compute(s.closedCandles, sr.Options{
 			Timeframe:   "5m",
-			Lookback:    120,
+			Lookback:    lookback,
 			Mode:        sr.ModeZones,
 			MinStrength: 2,
 		})
