@@ -16,22 +16,9 @@
 
 ## Required Checks Before PR
 
-Run the full quality gate before opening a PR:
+Follow the local quality-gate commands in [`CONTRIBUTING.md`](CONTRIBUTING.md). CI is authoritative for exact analyzer versions and verifies both the minimum Go version declared by `go.mod` and the current stable Go release.
 
-```bash
-test -z "$(gofmt -l .)"
-go test ./...
-go test -race ./...
-go vet ./...
-staticcheck ./...
-golangci-lint run
-go test -coverprofile=/tmp/go-sr-coverage.out ./...
-go tool cover -func=/tmp/go-sr-coverage.out
-go test -run=^$ -fuzz=FuzzAggregateCandlesToTimeframe -fuzztime=5s
-go test -run=^$ -fuzz=FuzzComputeInvariants -fuzztime=5s
-```
-
-Run `gofmt -w .` first if the formatting check prints files. Coverage must remain at the documented `100.0%` statement coverage target. Run any fuzz smoke tests present in the repo.
+Coverage must remain at the documented `100.0%` statement coverage target.
 
 ## Commit Style
 
