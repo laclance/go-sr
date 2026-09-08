@@ -53,7 +53,10 @@ func buildZone(cluster []srPivot, candles []Candle, scanLen int) Level {
 	})
 
 	center := medianPivotPrice(members)
-	width := medianPivotWidth(members)
+	halfWidth := medianPivotWidth(members) / 2
+	for _, p := range members {
+		halfWidth = math.Max(halfWidth, math.Abs(p.Price-center))
+	}
 	lastTouchIndex := members[len(members)-1].Index
 
 	sourcePivotIndexes := make([]int, 0, len(members))
@@ -65,8 +68,8 @@ func buildZone(cluster []srPivot, candles []Candle, scanLen int) Level {
 
 	zone := Level{
 		Price:              center,
-		Top:                center + width/2,
-		Bottom:             center - width/2,
+		Top:                center + halfWidth,
+		Bottom:             center - halfWidth,
 		Strength:           len(members),
 		IsHigh:             members[0].IsHigh,
 		Timeframe:          members[0].Timeframe,
