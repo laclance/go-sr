@@ -1,7 +1,3 @@
-//go:build ignore
-
-// Copy this adapter into a BBGO strategy package and remove the build constraint.
-// It is excluded here so github.com/laclance/go-sr does not depend on BBGO.
 package strategy
 
 import (

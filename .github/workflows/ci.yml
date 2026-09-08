@@ -87,3 +87,33 @@ jobs:
 
       - name: Fuzz compute smoke
         run: go test -run=^$ -fuzz=FuzzComputeInvariants -fuzztime=5s
+
+  bbgo-example:
+    name: BBGO Example Compatibility
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up BBGO-compatible Go
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: examples/bbgo/go.mod
+          cache: false
+
+      - name: Show Go version
+        run: go version
+
+      - name: Verify root module remains BBGO-free
+        run: |
+          if go list -m all | grep -q '^github.com/c9s/bbgo '; then
+            echo 'BBGO unexpectedly present in the root module graph' >&2
+            exit 1
+          fi
+
+      - name: Test BBGO example compatibility
+        working-directory: examples/bbgo
+        run: |
+          go list -m github.com/c9s/bbgo
+          go test -mod=mod ./...

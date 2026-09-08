@@ -49,7 +49,7 @@ Open an issue with a minimal reproduction, Go version, OS, module version or com
 - Update README examples or docs if public behavior or API usage changes.
 - Do not add dependencies unless the PR explains why they are needed.
 
-AI-assisted contributions are welcome. Generated PRs must pass CI and be reviewed by a maintainer before merge.
+AI-assisted contributions are welcome. External AI-generated contributions must pass CI and be reviewed by a maintainer before merge; maintainer-authored PRs must pass the repository's required CI checks.
 
 ## Contribution License
 

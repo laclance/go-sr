@@ -20,8 +20,8 @@ func TestBBGOExampleUsesWarmupReadiness(t *testing.T) {
 		t.Fatalf("BBGO history cap: got %d, want greater than warmup %d", maxClosedCandles, warmup)
 	}
 
-	// adapter.go is deliberately build-excluded so the root module does not
-	// depend on BBGO. Check the copyable source directly instead.
+	// The adapter lives in a nested module so root tests do not compile BBGO.
+	// Keep these source checks focused on the example's warmup contract.
 	source, err := os.ReadFile("examples/bbgo/adapter.go")
 	if err != nil {
 		t.Fatalf("read BBGO adapter: %v", err)
