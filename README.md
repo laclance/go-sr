@@ -1,29 +1,166 @@
-# `github.com/laclance/go-sr`
+# `go-sr`
 
 [![CI](https://github.com/laclance/go-sr/actions/workflows/ci.yml/badge.svg)](https://github.com/laclance/go-sr/actions/workflows/ci.yml)
+[![Go Reference](https://pkg.go.dev/badge/github.com/laclance/go-sr.svg)](https://pkg.go.dev/github.com/laclance/go-sr)
+[![License: Apache-2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 
-`go-sr` is a standalone Go module for deterministic support/resistance detection and SR-specific multi-timeframe helpers.
+**Deterministic, no-lookahead support/resistance detection for Go trading systems.**
 
-## Scope
+`go-sr` is a focused Go module for support/resistance detection that is designed for backtests and live systems where reproducibility and no-lookahead behavior matter.
 
-This module owns:
+- Deterministic results for the same candle prefix and options
+- Closed-candle inputs and confirmation-based zone pivots
+- Legacy line-based and ATR-aware zone modes
+- Nearest support/resistance metadata for strategy logic
+- Multi-timeframe candle aggregation and sizing helpers
+- No third-party runtime dependencies
+- CI with race detection, static analysis, a high statement-coverage floor, and fuzz smoke tests
 
-- Closed-candle SR detection
-- Legacy line-based and zone-based SR modes
-- Deterministic nearest support/resistance metadata
-- SR-specific multi-timeframe helpers for aggregation, warmup sizing, and fetch sizing
+## Example
 
-This module intentionally does not own:
+![BTC 5m support/resistance zones detected by go-sr](docs/go-sr-preview.png)
 
-- Exchange/Binance parsing
-- Strategy scoring and trade evaluation
-- App-specific timeframe policy like "use `15m` and `1h` as the higher-timeframe bundles"
+*Zone-mode output generated from the repository's BTC 5m fixture. The preview shows detected support/resistance structure, qualified zones, and nearest levels.*
+
+## Install
+
+```bash
+go get github.com/laclance/go-sr@latest
+```
+
+```go
+import sr "github.com/laclance/go-sr"
+```
+
+## Quick Start
+
+```go
+levels, err := sr.Compute(candles, sr.Options{
+    Timeframe:   "5m",
+    Lookback:    120,
+    Mode:        sr.ModeZones,
+    MinStrength: 2,
+})
+if err != nil {
+    return err
+}
+
+fmt.Printf("support=%.2f resistance=%.2f\n",
+    levels.NearestSupport,
+    levels.NearestResistance,
+)
+```
+
+`candles` is a slice of closed OHLCV candles:
+
+```go
+[]sr.Candle{
+    {
+        OpenTime:  openTime,
+        CloseTime: closeTime,
+        Open:      100.0,
+        High:      103.0,
+        Low:       99.0,
+        Close:     102.0,
+        Volume:    1250,
+    },
+}
+```
+
+The result includes the detected levels plus strategy-friendly nearest-level metadata:
+
+```go
+levels.Levels
+levels.NearestSupport
+levels.NearestResistance
+levels.NearestSupportDistance
+levels.NearestResistanceDistance
+levels.NearestSupportStrength
+levels.NearestResistanceStrength
+levels.NearestSupportScore
+levels.NearestResistanceScore
+levels.NearSupport
+levels.NearResistance
+```
+
+## Standalone Example
+
+[`examples/basic`](examples/basic) is a self-contained runnable program. It generates deterministic closed 5m candles, runs zone mode, and prints the detected level count plus nearest support and resistance.
+
+From a clean directory, copy and run:
+
+```bash
+git clone --depth=1 https://github.com/laclance/go-sr.git
+cd go-sr
+go run ./examples/basic
+```
+
+The example imports only the Go standard library plus `github.com/laclance/go-sr`; it does not depend on repository test helpers. You can also copy `examples/basic/main.go` into another Go module unchanged, then replace `demoCandles` with candles from your exchange, broker, backtest fixture, or market-data pipeline.
+
+## Integrations
+
+- [BBGO closed-kline adapter](examples/bbgo) shows how to map BBGO `types.KLine` events into a bounded slice of closed `sr.Candle` values without adding BBGO to this module.
+
+## Why `go-sr`?
+
+Many trading implementations accidentally make support/resistance look better in backtests by allowing future candles to influence historical pivots. `go-sr` is built around prefix-stable, confirmation-based behavior so the same candle history produces the same result whether it is processed in a backtest or a live strategy.
+
+That makes it a good fit when you need S/R as a dependable input rather than a chart-only visual indicator.
+
+## Modes
+
+### Zone mode
+
+```go
+levels, err := sr.Compute(candles, sr.Options{
+    Timeframe:   "5m",
+    Lookback:    120,
+    Mode:        sr.ModeZones,
+    MinStrength: 2,
+})
+```
+
+Zone mode clusters confirmed swing pivots into support/resistance zones. `MinStrength` filters qualified zones; values <= 0 use the default of `2`.
+
+### Legacy mode
+
+```go
+levels, err := sr.Compute(candles, sr.Options{
+    Timeframe: "5m",
+    Lookback:  120,
+    Mode:      sr.ModeLegacy,
+    Tolerance: 0.002,
+})
+```
+
+Legacy mode provides line-based S/R behavior. `Tolerance` applies only to legacy mode; values <= 0 use the default `0.002`.
+
+## Multi-Timeframe Support
+
+Aggregate lower-timeframe candles before computing higher-timeframe S/R:
+
+```go
+candles15m := sr.AggregateCandlesToTimeframe(candles5m, "5m", "15m")
+
+levels15m, err := sr.Compute(candles15m, sr.Options{
+    Timeframe: "15m",
+    Lookback:  50,
+    Mode:      sr.ModeZones,
+})
+```
+
+Helpers are also available for calculating warmup and exchange-fetch requirements for a finite lookback:
+
+```go
+warmup := sr.WarmupCandles(50, sr.ModeZones)
+limit := sr.RequiredKlineLimit("5m", "1h", 50, sr.ModeZones)
+```
+
+`WarmupCandles` and `RequiredKlineLimit` return `0` when `lookback <= 0` because an all-supplied-history calculation has no finite warmup/fetch size. For bounded lookbacks, `RequiredKlineLimit` includes enough slack for fixed-duration UTC target buckets anchored at `1970-01-01T00:00:00Z`, plus one potentially live final candle. Exclude that still-open candle before calling `AggregateCandlesToTimeframe` or `Compute`; both APIs expect closed candles.
 
 ## Public API
 
 ```go
-import sr "github.com/laclance/go-sr"
-
 type Mode string
 
 const (
@@ -46,41 +183,50 @@ func WarmupCandles(lookback int, mode Mode) int
 func RequiredKlineLimit(baseInterval, targetInterval string, lookback int, mode Mode) int
 ```
 
-`Tolerance` applies only to `ModeLegacy`. When `Tolerance <= 0`, the fallback remains `0.002`.
-
-`MinStrength` applies only to `ModeZones`; values <= 0 use the default of 2.
+See the standalone program in [`examples/basic`](examples/basic), runnable package examples in [`examples_test.go`](examples_test.go), and the generated API documentation on [pkg.go.dev](https://pkg.go.dev/github.com/laclance/go-sr).
 
 ## Behavioral Contract
 
 - `Compute` is deterministic for the same candle prefix and options.
-- `Compute` returns an empty level bundle and an error for an unknown `Mode`.
+- `Options.Lookback <= 0` uses all supplied candle history in both modes.
+- Unknown modes cause `Compute` to return `EmptyLevels(opts.Timeframe)` plus an error.
+- `WarmupCandles` and `RequiredKlineLimit` require a positive, bounded lookback and return `0` when a finite size cannot be provided, including for non-positive lookbacks and existing invalid-input cases.
 - Zone-mode pivots are confirmation-based; no future candles are read beyond the current prefix.
-- `AggregateCandlesToTimeframe` uses UTC-aligned buckets and drops leading/trailing partial buckets.
-- `RequiredKlineLimit` returns the number of raw candles needed to build a higher-timeframe SR bundle and includes one extra live candle for exchange REST responses.
-- Supported interval strings use `<n><unit>` with `m`, `h`, or `d`, and the target interval must be larger than and evenly divisible by the base interval.
-- `NearSupport` / `NearResistance` flag whether the **nearest** level on each side is within a "near" threshold:
-  - `ModeZones`: within `2 ×` the zone's half-width (i.e., distance to zone center ≤ zone width). If the zone has zero width, the threshold falls back to `0.1%` of the current price.
-  - `ModeLegacy`: within `Tolerance × close` (absolute price distance). A closer-but-out-of-tolerance level overrides a farther within-tolerance one — the flag describes the nearest level, not any level.
+- `AggregateCandlesToTimeframe` uses fixed-duration UTC buckets anchored at `1970-01-01T00:00:00Z` and drops leading/trailing partial buckets.
+- For positive lookbacks, `RequiredKlineLimit` includes enough raw candles to preserve the higher-timeframe warmup after alignment to that bucket grid, plus one potentially live candle for exchange REST responses.
+- Callers must exclude still-open candles before passing data to `AggregateCandlesToTimeframe` or `Compute`.
+- Supported interval strings use `<n><unit>` with `m`, `h`, or `d`; the target interval must be larger than and evenly divisible by the base interval.
+- `NearSupport` / `NearResistance` describe whether the nearest level on each side is within the mode-specific near threshold.
+- In zone mode, the near threshold is `2 ×` the zone half-width; zero-width zones fall back to `0.1%` of the absolute current price.
+- In legacy mode, the near threshold is `Tolerance × close`.
 
-## Quality Gate
+## Scope
 
-CI runs on every push and pull request. The gate requires:
+This module owns:
 
-- `gofmt`
-- `go test ./...`
-- `go test -race ./...`
-- `go vet ./...`
-- `staticcheck ./...`
-- `golangci-lint run`
-- `100.0%` statement coverage
-- 5-second fuzz smoke tests for aggregation and compute invariants
+- Closed-candle S/R detection
+- Legacy line-based and zone-based S/R modes
+- Deterministic nearest support/resistance metadata
+- S/R-specific multi-timeframe aggregation, warmup sizing, and fetch sizing
+
+This module intentionally does **not** own:
+
+- Exchange or Binance parsing
+- Strategy scoring or trade evaluation
+- App-specific timeframe policy
+- Order execution
+
+Keeping exchange and strategy concerns outside the package makes `go-sr` usable across backtest engines, bots, and brokers.
 
 ## Manual Chart Inspection
 
-Generate a local HTML chart from the BTC fixture when you want to visually inspect whether SR zones line up with market structure:
+The repository includes a BTC fixture and an HTML chart generator for visually inspecting detected zones:
 
 ```bash
-GO_SR_CHART=/tmp/go-sr-btc-5m.html go test -run TestGenerateManualSRChart -count=1 -v
+GO_SR_CHART=/tmp/go-sr-btc-5m.html \
+  go test -run TestGenerateManualSRChart -count=1 -v
+
+xdg-open /tmp/go-sr-btc-5m.html
 ```
 
 Optional overrides:
@@ -93,35 +239,25 @@ GO_SR_CHART_WINDOW=300
 GO_SR_CHART_MIN_STRENGTH=1
 ```
 
-## Install
+## Quality Gate
 
-```bash
-go get github.com/laclance/go-sr
-```
+CI runs on pull requests and pushes to `main` and requires:
 
-## Quick Start
+- `gofmt`
+- `go test ./...`
+- `go test -race ./...`
+- `go vet ./...`
+- `staticcheck ./...`
+- `golangci-lint run`
+- A high statement-coverage floor with the actual total reported
+- Fuzz smoke tests for aggregation and compute invariants
 
-```go
-import sr "github.com/laclance/go-sr"
+## Contributing
 
-levels, err := sr.Compute(candles, sr.Options{
-    Timeframe: "5m",
-    Lookback:  50,
-    Mode:      sr.ModeZones,
-})
-if err != nil {
-    return err
-}
+Issues and pull requests are welcome. See [`CONTRIBUTING.md`](CONTRIBUTING.md) before making a change, and use [`SECURITY.md`](SECURITY.md) for security reports.
 
-agg15m := sr.AggregateCandlesToTimeframe(candles, "5m", "15m")
-levels15m, err := sr.Compute(agg15m, sr.Options{
-    Timeframe: "15m",
-    Lookback:  50,
-    Mode:      sr.ModeZones,
-})
-if err != nil {
-    return err
-}
-```
+If you are using `go-sr` in a project, opening a discussion or issue with your use case is also useful feedback for the API.
 
-See the runnable examples in `examples_test.go` for minimal workflows covering zone mode, legacy mode, and multi-timeframe aggregation.
+## License
+
+Apache-2.0. See [`LICENSE`](LICENSE).

@@ -13,16 +13,22 @@ func Compute(candles []Candle, opts Options) (Levels, error) {
 		return EmptyLevels(opts.Timeframe), err
 	}
 
+	var levels Levels
 	switch mode {
 	case ModeZones:
-		return computeZones(candles, opts.Timeframe, opts.Lookback, opts.MinStrength), nil
+		levels = computeZones(candles, opts.Timeframe, opts.Lookback, opts.MinStrength)
 	default:
 		tolerance := opts.Tolerance
 		if tolerance <= 0 {
 			tolerance = 0.002
 		}
-		return computeSRLegacy(candles, opts.Timeframe, opts.Lookback, tolerance), nil
+		levels = computeSRLegacy(candles, opts.Timeframe, opts.Lookback, tolerance)
 	}
+
+	if err := validateFiniteLevels(levels); err != nil {
+		return EmptyLevels(opts.Timeframe), err
+	}
+	return levels, nil
 }
 
 // EmptyLevels returns the zero-value bundle for a timeframe label.
@@ -159,7 +165,7 @@ func detectZoneProximity(zones []Level, price float64) (
 		supScore = z.Score
 		zoneRadius := (z.Top - z.Bottom) / 2
 		if zoneRadius <= 0 {
-			zoneRadius = price * 0.001
+			zoneRadius = math.Abs(price) * 0.001
 		}
 		if bestSuppDist <= zoneRadius*2 {
 			nearSup = true
@@ -174,7 +180,7 @@ func detectZoneProximity(zones []Level, price float64) (
 		resScore = z.Score
 		zoneRadius := (z.Top - z.Bottom) / 2
 		if zoneRadius <= 0 {
-			zoneRadius = price * 0.001
+			zoneRadius = math.Abs(price) * 0.001
 		}
 		if bestResiDist <= zoneRadius*2 {
 			nearRes = true

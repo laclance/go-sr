@@ -1,23 +1,8 @@
 package sr
 
-import "time"
+import "math"
 
-// srPivot holds per-swing data captured at pivot confirmation time. Keep its
-// fields identical to PivotInfo; pivotInfo relies on direct conversion.
-type srPivot struct {
-	Index             int
-	ConfirmedAtIndex  int
-	Time              time.Time
-	Price             float64
-	IsHigh            bool
-	Timeframe         string
-	ATRSnapshot       float64
-	AvgVolumeSnapshot float64
-	Volume            float64
-	VolumeRatio       float64
-	MergeWidth        float64
-	BounceATR         float64
-}
+type srPivot PivotInfo
 
 func findPivotHighs(candles []Candle, timeframe string, lookback int) []srPivot {
 	return findPivots(candles, timeframe, lookback, true)
@@ -93,7 +78,7 @@ func isConfirmedPivot(candles []Candle, idx int, isHigh bool) bool {
 
 func pivotMergeWidth(p srPivot) float64 {
 	width := p.ATRSnapshot * 0.25
-	priceFloor := p.Price * 0.001
+	priceFloor := math.Abs(p.Price) * 0.001
 	if width < priceFloor {
 		width = priceFloor
 	}

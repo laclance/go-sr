@@ -12,6 +12,9 @@ func computeSRLegacy(candles []Candle, timeframe string, lookback int, tolerance
 	if tolerance <= 0 {
 		tolerance = 0.002
 	}
+	if lookback <= 0 {
+		lookback = n
+	}
 
 	start := n - lookback
 	if start < legacyPivotWindow {
@@ -23,7 +26,7 @@ func computeSRLegacy(candles []Candle, timeframe string, lookback int, tolerance
 	}
 
 	lastClose := candles[n-1].Close
-	tolAbs := lastClose * tolerance
+	tolAbs := math.Abs(lastClose) * tolerance
 
 	var highs, lows []float64
 	for i := start; i < end; i++ {
@@ -88,34 +91,33 @@ func isSwingLow(candles []Candle, i, k int) bool {
 
 func clusterLevels(prices []float64, isHigh bool, tolAbs float64, timeframe string) []Level {
 	type entry struct {
-		sum   float64
-		count int
+		center float64
+		count  int
 	}
 	var entries []entry
 
 	for _, p := range prices {
 		merged := false
 		for i := range entries {
-			center := entries[i].sum / float64(entries[i].count)
-			if math.Abs(p-center) <= tolAbs {
-				entries[i].sum += p
-				entries[i].count++
+			if math.Abs(p-entries[i].center) <= tolAbs {
+				nextCount := entries[i].count + 1
+				entries[i].center += (p - entries[i].center) / float64(nextCount)
+				entries[i].count = nextCount
 				merged = true
 				break
 			}
 		}
 		if !merged {
-			entries = append(entries, entry{sum: p, count: 1})
+			entries = append(entries, entry{center: p, count: 1})
 		}
 	}
 
 	levels := make([]Level, 0, len(entries))
 	for _, e := range entries {
-		center := e.sum / float64(e.count)
 		levels = append(levels, Level{
-			Price:     center,
-			Top:       center + tolAbs,
-			Bottom:    center - tolAbs,
+			Price:     e.center,
+			Top:       e.center + tolAbs,
+			Bottom:    e.center - tolAbs,
 			Strength:  e.count,
 			Score:     0,
 			IsHigh:    isHigh,

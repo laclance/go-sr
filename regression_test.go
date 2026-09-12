@@ -11,6 +11,8 @@ import (
 	"time"
 )
 
+var btcCSVFixtureHeader = [...]string{"open_time", "open", "high", "low", "close", "volume"}
+
 func loadBTCCSVFixture(t *testing.T) []Candle {
 	t.Helper()
 
@@ -24,27 +26,45 @@ func loadBTCCSVFixture(t *testing.T) []Candle {
 	if err != nil {
 		t.Fatalf("open btc csv: %v", err)
 	}
-	defer f.Close()
+	defer func() {
+		if err := f.Close(); err != nil {
+			t.Errorf("close btc csv: %v", err)
+		}
+	}()
 
 	rows, err := csv.NewReader(f).ReadAll()
 	if err != nil {
 		t.Fatalf("read btc csv: %v", err)
 	}
+	if len(rows) == 0 {
+		t.Fatal("btc csv fixture: missing header")
+	}
 
-	candles := make([]Candle, 0, len(rows))
-	for _, row := range rows {
-		if len(row) < 6 {
-			continue
+	header := rows[0]
+	if len(header) < len(btcCSVFixtureHeader) {
+		t.Fatalf("btc csv header: got %d columns, want at least %d", len(header), len(btcCSVFixtureHeader))
+	}
+	for i, want := range btcCSVFixtureHeader {
+		if header[i] != want {
+			t.Fatalf("btc csv header column %d: got %q, want %q", i+1, header[i], want)
+		}
+	}
+
+	candles := make([]Candle, 0, len(rows)-1)
+	for i, row := range rows[1:] {
+		rowNumber := i + 2
+		if len(row) < len(btcCSVFixtureHeader) {
+			t.Fatalf("btc csv row %d: got %d columns, want at least %d", rowNumber, len(row), len(btcCSVFixtureHeader))
 		}
 		openTimeMs, err := strconv.ParseInt(row[0], 10, 64)
 		if err != nil {
-			continue
+			t.Fatalf("btc csv row %d timestamp: %v", rowNumber, err)
 		}
-		open, _ := strconv.ParseFloat(row[1], 64)
-		high, _ := strconv.ParseFloat(row[2], 64)
-		low, _ := strconv.ParseFloat(row[3], 64)
-		closePrice, _ := strconv.ParseFloat(row[4], 64)
-		volume, _ := strconv.ParseFloat(row[5], 64)
+		open := parseFixtureFloat(t, rowNumber, "open", row[1])
+		high := parseFixtureFloat(t, rowNumber, "high", row[2])
+		low := parseFixtureFloat(t, rowNumber, "low", row[3])
+		closePrice := parseFixtureFloat(t, rowNumber, "close", row[4])
+		volume := parseFixtureFloat(t, rowNumber, "volume", row[5])
 		openTime := time.UnixMilli(openTimeMs).UTC()
 		candles = append(candles, Candle{
 			OpenTime:  openTime,
@@ -57,6 +77,19 @@ func loadBTCCSVFixture(t *testing.T) []Candle {
 		})
 	}
 	return candles
+}
+
+func parseFixtureFloat(t *testing.T, rowNumber int, fieldName, value string) float64 {
+	t.Helper()
+
+	v, err := strconv.ParseFloat(value, 64)
+	if err != nil {
+		t.Fatalf("btc csv row %d %s: %v", rowNumber, fieldName, err)
+	}
+	if math.IsNaN(v) || math.IsInf(v, 0) {
+		t.Fatalf("btc csv row %d %s: non-finite value %q", rowNumber, fieldName, value)
+	}
+	return v
 }
 
 type btcSnapshot struct {
@@ -79,8 +112,13 @@ type btcSnapshot struct {
 }
 
 func TestBTCCSVRegressionSnapshots(t *testing.T) {
+	const snapshotCandles = 900
+
 	candles := loadBTCCSVFixture(t)
-	prefix := candles[:900]
+	if len(candles) < snapshotCandles {
+		t.Fatalf("btc csv fixture: got %d candles, need at least %d", len(candles), snapshotCandles)
+	}
+	prefix := candles[:snapshotCandles]
 
 	snapshots := []btcSnapshot{
 		func() btcSnapshot {

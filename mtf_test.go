@@ -224,32 +224,46 @@ func TestAggregateCandlesToTimeframe_InvalidIntervalsReturnNil(t *testing.T) {
 }
 
 func TestWarmupCandles_ModeAware(t *testing.T) {
-	if got := WarmupCandles(50, ModeLegacy); got != 70 {
-		t.Fatalf("legacy warmup: got %d want 70", got)
+	if got := WarmupCandles(50, ModeLegacy); got != 55 {
+		t.Fatalf("legacy warmup: got %d want 55", got)
 	}
-	if got := WarmupCandles(50, ModeZones); got != 68 {
-		t.Fatalf("zone warmup: got %d want 68", got)
+	if got := WarmupCandles(50, ModeZones); got != 66 {
+		t.Fatalf("zone warmup: got %d want 66", got)
 	}
-	if got := WarmupCandles(-10, ModeLegacy); got != 20 {
-		t.Fatalf("negative lookback should clamp to zero in legacy mode: got %d want 20", got)
-	}
-	if got := WarmupCandles(-10, ModeZones); got != 18 {
-		t.Fatalf("negative lookback should clamp to zero in zone mode: got %d want 18", got)
+}
+
+func TestWarmupCandles_NonPositiveLookbackReturnsZero(t *testing.T) {
+	for _, mode := range []Mode{ModeLegacy, ModeZones} {
+		for _, lookback := range []int{0, -10} {
+			if got := WarmupCandles(lookback, mode); got != 0 {
+				t.Fatalf("warmup for lookback %d mode %q: got %d want 0", lookback, mode, got)
+			}
+		}
 	}
 }
 
 func TestRequiredKlineLimit_ModeAware(t *testing.T) {
-	if got := RequiredKlineLimit("5m", "1h", 50, ModeLegacy); got != 841 {
-		t.Fatalf("legacy required limit: got %d want 841", got)
+	if got := RequiredKlineLimit("5m", "1h", 50, ModeLegacy); got != 672 {
+		t.Fatalf("legacy required limit: got %d want 672", got)
 	}
-	if got := RequiredKlineLimit("5m", "1h", 50, ModeZones); got != 817 {
-		t.Fatalf("zone required limit: got %d want 817", got)
+	if got := RequiredKlineLimit("5m", "1h", 50, ModeZones); got != 804 {
+		t.Fatalf("zone required limit: got %d want 804", got)
 	}
-	if got := RequiredKlineLimit("15m", "1h", 50, ModeLegacy); got != 281 {
-		t.Fatalf("legacy 15m->1h required limit: got %d want 281", got)
+	if got := RequiredKlineLimit("15m", "1h", 50, ModeLegacy); got != 224 {
+		t.Fatalf("legacy 15m->1h required limit: got %d want 224", got)
 	}
-	if got := RequiredKlineLimit("1h", "1d", 1, ModeZones); got != 457 {
-		t.Fatalf("zone 1h->1d required limit: got %d want 457", got)
+	if got := RequiredKlineLimit("1h", "1d", 1, ModeZones); got != 432 {
+		t.Fatalf("zone 1h->1d required limit: got %d want 432", got)
+	}
+}
+
+func TestRequiredKlineLimit_NonPositiveLookbackReturnsZero(t *testing.T) {
+	for _, mode := range []Mode{ModeLegacy, ModeZones} {
+		for _, lookback := range []int{0, -10} {
+			if got := RequiredKlineLimit("5m", "1h", lookback, mode); got != 0 {
+				t.Fatalf("required limit for lookback %d mode %q: got %d want 0", lookback, mode, got)
+			}
+		}
 	}
 }
 

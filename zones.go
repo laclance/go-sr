@@ -12,6 +12,8 @@ func buildZones(pivots []srPivot, candles []Candle, lookback int) []Level {
 
 	window := newSRLookbackWindow(len(candles), lookback)
 	sorted := append([]srPivot(nil), pivots...)
+	// clusterPriceSortedPivots relies on this ordering so cluster members stay
+	// price-sorted and their price median can be read without copying/sorting.
 	sort.Slice(sorted, func(i, j int) bool {
 		if sorted[i].Price != sorted[j].Price {
 			return sorted[i].Price < sorted[j].Price
@@ -19,18 +21,7 @@ func buildZones(pivots []srPivot, candles []Candle, lookback int) []Level {
 		return sorted[i].Index < sorted[j].Index
 	})
 
-	clusters := [][]srPivot{{sorted[0]}}
-	for _, p := range sorted[1:] {
-		last := &clusters[len(clusters)-1]
-		clusterMedianPrice := medianPivotPrice(*last)
-		clusterMedianWidth := medianPivotWidth(*last)
-		threshold := math.Max(clusterMedianWidth, p.MergeWidth)
-		if math.Abs(p.Price-clusterMedianPrice) <= threshold {
-			*last = append(*last, p)
-			continue
-		}
-		clusters = append(clusters, []srPivot{p})
-	}
+	clusters := clusterPriceSortedPivots(sorted)
 
 	zones := make([]Level, 0, len(clusters))
 	for _, cluster := range clusters {
@@ -53,7 +44,10 @@ func buildZone(cluster []srPivot, candles []Candle, scanLen int) Level {
 	})
 
 	center := medianPivotPrice(members)
-	width := medianPivotWidth(members)
+	halfWidth := medianPivotWidth(members) / 2
+	for _, p := range members {
+		halfWidth = math.Max(halfWidth, math.Abs(p.Price-center))
+	}
 	lastTouchIndex := members[len(members)-1].Index
 
 	sourcePivotIndexes := make([]int, 0, len(members))
@@ -65,8 +59,8 @@ func buildZone(cluster []srPivot, candles []Candle, scanLen int) Level {
 
 	zone := Level{
 		Price:              center,
-		Top:                center + width/2,
-		Bottom:             center - width/2,
+		Top:                center + halfWidth,
+		Bottom:             center - halfWidth,
 		Strength:           len(members),
 		IsHigh:             members[0].IsHigh,
 		Timeframe:          members[0].Timeframe,
@@ -130,6 +124,13 @@ func dedupeZonesBySide(zones []Level) []Level {
 		if zonesOverlap(*last, z) {
 			if preferZoneForDedup(z, *last) {
 				*last = cloneSRLevel(z)
+				for len(deduped) > 1 && zonesOverlap(deduped[len(deduped)-2], deduped[len(deduped)-1]) {
+					candidateIndex := len(deduped) - 1
+					if preferZoneForDedup(deduped[candidateIndex], deduped[candidateIndex-1]) {
+						deduped[candidateIndex-1] = deduped[candidateIndex]
+					}
+					deduped = deduped[:candidateIndex]
+				}
 			}
 			continue
 		}

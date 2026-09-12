@@ -10,12 +10,13 @@ cd go-sr
 go test ./...
 ```
 
-Install optional analysis tools if they are not already available:
+Static analysis uses Staticcheck and golangci-lint. CI pins the exact analyzer versions; use [`.github/workflows/ci.yml`](.github/workflows/ci.yml) when you need to reproduce those pins locally.
 
-```bash
-go install honnef.co/go/tools/cmd/staticcheck@2024.1.1
-go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.64.8
-```
+## Go Version Policy
+
+`go.mod` declares the minimum supported Go version. CI runs the normal test suite on that minimum version and on the current stable Go release. The heavier race and static-analysis quality gate runs once on current stable Go so tool versions are not constrained by the compatibility floor.
+
+Do not raise the `go.mod` minimum solely to accommodate development tooling.
 
 ## Tests and Quality Gate
 
@@ -34,7 +35,7 @@ go test -run=^$ -fuzz=FuzzAggregateCandlesToTimeframe -fuzztime=5s
 go test -run=^$ -fuzz=FuzzComputeInvariants -fuzztime=5s
 ```
 
-Run `gofmt -w .` first if the formatting check prints files. Coverage must stay at the documented `100.0%` statement coverage target.
+Run `gofmt -w .` first if the formatting check prints files. CI requires at least 95% statement coverage and reports the actual total. Keep tests focused on meaningful behavior, edge cases, regressions, and invariants rather than coverage alone.
 
 ## Issues
 
@@ -48,4 +49,8 @@ Open an issue with a minimal reproduction, Go version, OS, module version or com
 - Update README examples or docs if public behavior or API usage changes.
 - Do not add dependencies unless the PR explains why they are needed.
 
-AI-assisted contributions are welcome. Generated PRs must pass CI and be reviewed by a maintainer before merge.
+AI-assisted contributions are welcome. External AI-generated contributions must pass CI and be reviewed by a maintainer before merge; maintainer-authored PRs must pass the repository's required CI checks.
+
+## Contribution License
+
+Unless explicitly stated otherwise, contributions intentionally submitted for inclusion in `go-sr` are provided under the Apache License 2.0, consistent with the repository [`LICENSE`](LICENSE).
