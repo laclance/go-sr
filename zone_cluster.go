@@ -6,33 +6,42 @@ import (
 )
 
 // clusterPriceSortedPivots clusters pivots in ascending price order. buildZones
-// establishes that ordering before calling this helper, so each cluster remains
-// price-sorted as members are appended.
+// establishes that ordering before calling this helper, so each returned cluster
+// remains price-sorted.
 func clusterPriceSortedPivots(sorted []srPivot) [][]srPivot {
 	if len(sorted) == 0 {
 		return nil
 	}
 
-	clusters := [][]srPivot{{sorted[0]}}
-	sortedWidths := make([]float64, 1, len(sorted))
-	sortedWidths[0] = sorted[0].MergeWidth
+	// Keep cluster storage independent from the caller while allocating pivot
+	// storage once. Full-slice expressions keep appends to one cluster from
+	// overwriting the next cluster's backing storage.
+	members := append([]srPivot(nil), sorted...)
+	var clusters [][]srPivot
+	clusterStart := 0
 
-	for _, p := range sorted[1:] {
-		last := &clusters[len(clusters)-1]
-		clusterMedianPrice := medianPriceSortedPivots(*last)
+	sortedWidths := make([]float64, 1, len(members))
+	sortedWidths[0] = members[0].MergeWidth
+
+	for i := 1; i < len(members); i++ {
+		p := members[i]
+		current := members[clusterStart:i:i]
+		clusterMedianPrice := medianPriceSortedPivots(current)
 		clusterMedianWidth := medianSortedFloat64(sortedWidths)
 		threshold := math.Max(clusterMedianWidth, p.MergeWidth)
 		if math.Abs(p.Price-clusterMedianPrice) <= threshold {
-			*last = append(*last, p)
 			sortedWidths = insertSortedFloat64(sortedWidths, p.MergeWidth)
 			continue
 		}
 
-		clusters = append(clusters, []srPivot{p})
+		clusters = append(clusters, current)
+		clusterStart = i
 		sortedWidths = sortedWidths[:1]
 		sortedWidths[0] = p.MergeWidth
 	}
 
+	end := len(members)
+	clusters = append(clusters, members[clusterStart:end:end])
 	return clusters
 }
 
