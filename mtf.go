@@ -89,54 +89,33 @@ func AggregateCandlesToTimeframe(candles []Candle, fromInterval, toInterval stri
 	}
 	bucketSize := int(bucketSizeDur)
 	type bucket struct {
-		start   time.Time
-		end     time.Time
-		candles []Candle
-		seen    map[time.Time]struct{}
+		start      time.Time
+		end        time.Time
+		count      int
+		continuous bool
+		agg        Candle
 	}
 
 	var (
-		out     []Candle
-		current *bucket
-		invalid bool
+		out         []Candle
+		current     bucket
+		haveCurrent bool
+		invalid     bool
 	)
+	seen := make(map[time.Time]struct{})
 
 	flush := func() {
-		if current == nil || len(current.candles) != bucketSize {
+		if !haveCurrent || current.count != bucketSize || !current.continuous {
 			return
 		}
-		first := current.candles[0]
-		last := current.candles[len(current.candles)-1]
-		for i, candle := range current.candles {
-			expectedOpen := current.start.Add(time.Duration(i) * fromDur)
-			if !candle.OpenTime.UTC().Equal(expectedOpen) {
-				return
-			}
-		}
-
-		agg := Candle{
-			OpenTime:  current.start,
-			CloseTime: current.end,
-			Open:      first.Open,
-			High:      first.High,
-			Low:       first.Low,
-			Close:     last.Close,
-			Volume:    0,
-		}
-		for _, candle := range current.candles {
-			if candle.High > agg.High {
-				agg.High = candle.High
-			}
-			if candle.Low < agg.Low {
-				agg.Low = candle.Low
-			}
-			agg.Volume += candle.Volume
-		}
-		if !candleValuesFinite(agg) {
+		if !candleValuesFinite(current.agg) {
 			invalid = true
 			return
 		}
-		out = append(out, agg)
+		if out == nil {
+			out = make([]Candle, 0, len(candles)/bucketSize)
+		}
+		out = append(out, current.agg)
 	}
 
 	for _, candle := range candles {
@@ -144,24 +123,52 @@ func AggregateCandlesToTimeframe(candles []Candle, fromInterval, toInterval stri
 		if !ok {
 			return nil
 		}
-		bucketEnd := bucketStart.Add(toDur)
-		if current == nil || !current.start.Equal(bucketStart) {
+		if !haveCurrent || !current.start.Equal(bucketStart) {
 			flush()
 			if invalid {
 				return nil
 			}
-			current = &bucket{
-				start: bucketStart,
-				end:   bucketEnd,
-				seen:  make(map[time.Time]struct{}),
+			current = bucket{
+				start:      bucketStart,
+				end:        bucketStart.Add(toDur),
+				continuous: true,
 			}
+			haveCurrent = true
+			clear(seen)
 		}
+
 		openTime := candle.OpenTime.UTC()
-		if _, ok := current.seen[openTime]; ok {
+		if _, ok := seen[openTime]; ok {
 			continue
 		}
-		current.seen[openTime] = struct{}{}
-		current.candles = append(current.candles, candle)
+		seen[openTime] = struct{}{}
+
+		index := current.count
+		if index >= bucketSize || !openTime.Equal(current.start.Add(time.Duration(index)*fromDur)) {
+			current.continuous = false
+		}
+
+		if index == 0 {
+			current.agg = Candle{
+				OpenTime:  current.start,
+				CloseTime: current.end,
+				Open:      candle.Open,
+				High:      candle.High,
+				Low:       candle.Low,
+				Close:     candle.Close,
+				Volume:    0,
+			}
+		} else {
+			if candle.High > current.agg.High {
+				current.agg.High = candle.High
+			}
+			if candle.Low < current.agg.Low {
+				current.agg.Low = candle.Low
+			}
+			current.agg.Close = candle.Close
+		}
+		current.agg.Volume += candle.Volume
+		current.count++
 	}
 	flush()
 	if invalid {
