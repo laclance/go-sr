@@ -49,3 +49,52 @@ func TestDedupeZonesBySide_RechecksReplacementAgainstEarlierZones(t *testing.T) 
 		}
 	}
 }
+
+func TestFilterZones_PreservesNestedSliceIndependenceFromRawZones(t *testing.T) {
+	raw := []Level{
+		{
+			Price:              100,
+			Bottom:             99,
+			Top:                101,
+			Strength:           2,
+			Score:              10,
+			IsHigh:             false,
+			SourcePivotIndexes: []int{1, 2},
+			Pivots:             []PivotInfo{{Index: 1}, {Index: 2}},
+		},
+		{
+			Price:              110,
+			Bottom:             109,
+			Top:                111,
+			Strength:           2,
+			Score:              9,
+			IsHigh:             false,
+			SourcePivotIndexes: []int{3, 4},
+			Pivots:             []PivotInfo{{Index: 3}, {Index: 4}},
+		},
+	}
+
+	filtered := filterZones(raw, 2)
+	if len(filtered) != 2 {
+		t.Fatalf("expected two filtered zones, got %d", len(filtered))
+	}
+
+	filtered[0].SourcePivotIndexes[0] = 999
+	filtered[0].Pivots[0].Index = 999
+
+	if raw[0].SourcePivotIndexes[0] != 1 {
+		t.Fatalf("filtered SourcePivotIndexes aliases raw zone: %+v", raw[0].SourcePivotIndexes)
+	}
+	if raw[0].Pivots[0].Index != 1 {
+		t.Fatalf("filtered Pivots aliases raw zone: %+v", raw[0].Pivots)
+	}
+	if filtered[1].SourcePivotIndexes[0] != 3 || filtered[1].Pivots[0].Index != 3 {
+		t.Fatalf("filtered zones alias each other: %+v", filtered)
+	}
+
+	raw[1].SourcePivotIndexes[0] = 777
+	raw[1].Pivots[0].Index = 777
+	if filtered[1].SourcePivotIndexes[0] != 3 || filtered[1].Pivots[0].Index != 3 {
+		t.Fatalf("raw zone mutation leaked into filtered result: %+v", filtered[1])
+	}
+}
