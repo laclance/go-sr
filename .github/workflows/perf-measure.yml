@@ -1,0 +1,37 @@
+name: Temporary Performance Measurement
+
+on:
+  pull_request:
+    branches:
+      - dev
+
+permissions:
+  contents: read
+
+jobs:
+  measure:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+
+      - name: Set up Go
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e
+        with:
+          go-version: 'stable'
+          cache: true
+
+      - name: Benchmark end-to-end workflows
+        run: go test -run=^$ -bench='Benchmark(ComputeZones|ComputeLegacy|AggregateCandlesToTimeframe)$' -benchmem -benchtime=1s -count=5
+
+      - name: Profile large zone compute
+        run: go test -run=^$ -bench='BenchmarkComputeZones/all_history_10000$' -benchtime=3s -cpuprofile=zone-cpu.out
+
+      - name: Report zone CPU profile
+        run: go tool pprof -top zone-cpu.out
+
+      - name: Profile large aggregation allocations
+        run: go test -run=^$ -bench='BenchmarkAggregateCandlesToTimeframe/5m_to_1h/large_100000$' -benchtime=2s -memprofile=aggregate-mem.out
+
+      - name: Report aggregation allocation profile
+        run: go tool pprof -top -alloc_space aggregate-mem.out
