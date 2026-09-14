@@ -51,6 +51,14 @@ func TestRequiredKlineLimitBoundary(t *testing.T) {
 	}
 }
 
+func TestRequiredKlineLimitRejectsMaxIntWarmup(t *testing.T) {
+	zonePadding := max(pivotWindow, max(rsiPeriod, avgVolPeriod)-pivotWindow)
+	lookback := math.MaxInt - zonePadding
+	if got := RequiredKlineLimit("1m", "2m", lookback, ModeZones); got != 0 {
+		t.Fatalf("RequiredKlineLimit with MaxInt warmup = %d, want 0", got)
+	}
+}
+
 func TestIntervalDurationBoundary(t *testing.T) {
 	cases := []struct {
 		suffix string
@@ -94,6 +102,20 @@ func TestAggregateCandlesToTimeframeOverflowIntervalsReturnNil(t *testing.T) {
 	}}
 	if got := AggregateCandlesToTimeframe(candles, "3749353613647811m", "7498707227295622m"); got != nil {
 		t.Fatalf("expected nil for overflowed interval pair, got %+v", got)
+	}
+}
+
+func TestAggregateCandlesToTimeframeRejectsBucketFloorOverflow(t *testing.T) {
+	candles := []Candle{{
+		OpenTime: time.Unix(math.MinInt64, 0).UTC(),
+		Open:     1,
+		High:     1,
+		Low:      1,
+		Close:    1,
+		Volume:   1,
+	}}
+	if got := AggregateCandlesToTimeframe(candles, "1m", "2m"); got != nil {
+		t.Fatalf("expected nil when UTC bucket floor overflows, got %+v", got)
 	}
 }
 
