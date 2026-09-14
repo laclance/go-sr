@@ -22,17 +22,49 @@ func buildZones(pivots []srPivot, candles []Candle, lookback int) []Level {
 	})
 
 	clusters := clusterPriceSortedPivots(sorted)
+	maxClusterSize := 0
+	for _, cluster := range clusters {
+		maxClusterSize = max(maxClusterSize, len(cluster))
+	}
+	widthScratch := make([]float64, maxClusterSize)
 
 	zones := make([]Level, 0, len(clusters))
 	for _, cluster := range clusters {
-		zones = append(zones, buildZone(cluster, candles, window.ScanLen))
+		zones = append(zones, buildPriceSortedZone(cluster, candles, window.ScanLen, widthScratch))
 	}
 	sortSRLevels(zones)
 	return zones
 }
 
+// buildPriceSortedZone consumes an internal cluster produced by
+// clusterPriceSortedPivots. Its price order is used to read the price median
+// before the cluster is reordered in place for the observable pivot metadata.
+func buildPriceSortedZone(cluster []srPivot, candles []Candle, scanLen int, widthScratch []float64) Level {
+	center := medianPriceSortedPivots(cluster)
+	widths := widthScratch[:len(cluster)]
+	for i, p := range cluster {
+		widths[i] = p.MergeWidth
+	}
+	sort.Float64s(widths)
+	halfWidth := medianSortedFloat64(widths) / 2
+
+	sortZoneMembers(cluster)
+	return buildZoneFromMembers(cluster, candles, scanLen, center, halfWidth)
+}
+
 func buildZone(cluster []srPivot, candles []Candle, scanLen int) Level {
 	members := append([]srPivot(nil), cluster...)
+	sortZoneMembers(members)
+	return buildZoneFromMembers(
+		members,
+		candles,
+		scanLen,
+		medianPivotPrice(members),
+		medianPivotWidth(members)/2,
+	)
+}
+
+func sortZoneMembers(members []srPivot) {
 	sort.Slice(members, func(i, j int) bool {
 		if members[i].Index != members[j].Index {
 			return members[i].Index < members[j].Index
@@ -42,19 +74,19 @@ func buildZone(cluster []srPivot, candles []Candle, scanLen int) Level {
 		}
 		return members[i].ConfirmedAtIndex < members[j].ConfirmedAtIndex
 	})
+}
 
-	center := medianPivotPrice(members)
-	halfWidth := medianPivotWidth(members) / 2
+func buildZoneFromMembers(members []srPivot, candles []Candle, scanLen int, center, halfWidth float64) Level {
 	for _, p := range members {
 		halfWidth = math.Max(halfWidth, math.Abs(p.Price-center))
 	}
 	lastTouchIndex := members[len(members)-1].Index
 
-	sourcePivotIndexes := make([]int, 0, len(members))
-	pivotInfos := make([]PivotInfo, 0, len(members))
-	for _, p := range members {
-		sourcePivotIndexes = append(sourcePivotIndexes, p.Index)
-		pivotInfos = append(pivotInfos, pivotInfo(p))
+	sourcePivotIndexes := make([]int, len(members))
+	pivotInfos := make([]PivotInfo, len(members))
+	for i, p := range members {
+		sourcePivotIndexes[i] = p.Index
+		pivotInfos[i] = pivotInfo(p)
 	}
 
 	zone := Level{
@@ -118,12 +150,12 @@ func dedupeZonesBySide(zones []Level) []Level {
 
 	sortSRLevels(zones)
 
-	deduped := []Level{cloneSRLevel(zones[0])}
+	deduped := []Level{zones[0]}
 	for _, z := range zones[1:] {
 		last := &deduped[len(deduped)-1]
 		if zonesOverlap(*last, z) {
 			if preferZoneForDedup(z, *last) {
-				*last = cloneSRLevel(z)
+				*last = z
 				for len(deduped) > 1 && zonesOverlap(deduped[len(deduped)-2], deduped[len(deduped)-1]) {
 					candidateIndex := len(deduped) - 1
 					if preferZoneForDedup(deduped[candidateIndex], deduped[candidateIndex-1]) {
@@ -134,7 +166,7 @@ func dedupeZonesBySide(zones []Level) []Level {
 			}
 			continue
 		}
-		deduped = append(deduped, cloneSRLevel(z))
+		deduped = append(deduped, z)
 	}
 	return deduped
 }

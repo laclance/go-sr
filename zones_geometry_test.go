@@ -44,3 +44,37 @@ func TestBuildZones_FinalGeometryContainsAllMemberPivots(t *testing.T) {
 		}
 	}
 }
+
+func TestBuildZones_PriceMedianPreservesMetadataOrder(t *testing.T) {
+	candles := makeFlatCandles(50, 100, time.Date(2024, 4, 6, 0, 0, 0, 0, time.UTC))
+	pivots := []srPivot{
+		{Index: 30, ConfirmedAtIndex: 34, Time: candles[30].CloseTime, Price: 100.4, IsHigh: false, Timeframe: "5m", MergeWidth: 1},
+		{Index: 10, ConfirmedAtIndex: 14, Time: candles[10].CloseTime, Price: 100.0, IsHigh: false, Timeframe: "5m", MergeWidth: 1},
+		{Index: 20, ConfirmedAtIndex: 25, Time: candles[20].CloseTime, Price: 100.2, IsHigh: false, Timeframe: "5m", MergeWidth: 1},
+		{Index: 20, ConfirmedAtIndex: 24, Time: candles[20].CloseTime, Price: 100.2, IsHigh: false, Timeframe: "5m", MergeWidth: 1},
+		{Index: 15, ConfirmedAtIndex: 19, Time: candles[15].CloseTime, Price: 100.1, IsHigh: false, Timeframe: "5m", MergeWidth: 1},
+	}
+
+	zones := buildZones(pivots, candles, 0)
+	if len(zones) != 1 {
+		t.Fatalf("expected one zone, got %d", len(zones))
+	}
+
+	zone := zones[0]
+	if zone.Price != 100.2 {
+		t.Fatalf("zone median price: want 100.2, got %v", zone.Price)
+	}
+
+	wantIndexes := []int{10, 15, 20, 20, 30}
+	for i, want := range wantIndexes {
+		if zone.SourcePivotIndexes[i] != want {
+			t.Fatalf("source pivot order at %d: want %d, got %d", i, want, zone.SourcePivotIndexes[i])
+		}
+	}
+	if zone.Pivots[2].ConfirmedAtIndex != 24 || zone.Pivots[3].ConfirmedAtIndex != 25 {
+		t.Fatalf("confirmation tie-break order changed: %+v", zone.Pivots)
+	}
+	if zone.LastTouchIndex != 30 {
+		t.Fatalf("last touch index: want 30, got %d", zone.LastTouchIndex)
+	}
+}
