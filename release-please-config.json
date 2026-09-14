@@ -3,6 +3,7 @@
   "release-type": "go",
   "include-component-in-tag": false,
   "include-v-in-tag": true,
+  "release-as": "1.1.14",
   "packages": {
     ".": {
       "package-name": "github.com/laclance/go-sr",
