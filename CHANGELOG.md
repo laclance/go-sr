@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.14](https://github.com/laclance/go-sr/compare/v1.1.13...v1.1.14) (2026-09-14)
+
+
+### Bug Fixes
+
+* include performance changes in releases ([#71](https://github.com/laclance/go-sr/issues/71)) ([d0fb8d3](https://github.com/laclance/go-sr/commit/d0fb8d3f8a7d2825cfcd8579b2cbd6bd561e7263))
+
 ## [1.1.13](https://github.com/laclance/go-sr/compare/v1.1.12...v1.1.13) (2026-09-08)
 
 
