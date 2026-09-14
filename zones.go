@@ -150,12 +150,12 @@ func dedupeZonesBySide(zones []Level) []Level {
 
 	sortSRLevels(zones)
 
-	deduped := []Level{cloneSRLevel(zones[0])}
+	deduped := []Level{zones[0]}
 	for _, z := range zones[1:] {
 		last := &deduped[len(deduped)-1]
 		if zonesOverlap(*last, z) {
 			if preferZoneForDedup(z, *last) {
-				*last = cloneSRLevel(z)
+				*last = z
 				for len(deduped) > 1 && zonesOverlap(deduped[len(deduped)-2], deduped[len(deduped)-1]) {
 					candidateIndex := len(deduped) - 1
 					if preferZoneForDedup(deduped[candidateIndex], deduped[candidateIndex-1]) {
@@ -166,7 +166,7 @@ func dedupeZonesBySide(zones []Level) []Level {
 			}
 			continue
 		}
-		deduped = append(deduped, cloneSRLevel(z))
+		deduped = append(deduped, z)
 	}
 	return deduped
 }
