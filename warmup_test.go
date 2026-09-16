@@ -6,7 +6,7 @@ import (
 )
 
 func TestWarmupCandles_ExactMinimum(t *testing.T) {
-	zonePadding := max(pivotWindow, max(rsiPeriod, avgVolPeriod)-pivotWindow)
+	zonePadding := max(pivotWindow, max(atrPeriod, avgVolPeriod)-pivotWindow)
 	if zonePadding != 16 {
 		t.Fatalf("zone warmup padding = %d, want 16 for current algorithm constants", zonePadding)
 	}

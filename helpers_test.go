@@ -98,7 +98,7 @@ func TestPivotBounceATR_EdgeCases(t *testing.T) {
 
 func TestComputeATR_ShortInputReturnsZero(t *testing.T) {
 	candles := makeFlatCandles(3, 100, time.Date(2024, 4, 14, 0, 0, 0, 0, time.UTC))
-	if got := computeATR(candles, rsiPeriod); got != 0 {
+	if got := computeATR(candles, atrPeriod); got != 0 {
 		t.Fatalf("expected zero ATR for short input, got %.4f", got)
 	}
 }

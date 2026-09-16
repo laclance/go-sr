@@ -80,6 +80,34 @@ func TestCompute_UnknownModeReturnsError(t *testing.T) {
 	}
 }
 
+func TestCompute_ZeroModeMatchesExplicitLegacy(t *testing.T) {
+	candles := buildSRCategoryCandles()
+	implicit, err := Compute(candles, Options{
+		Timeframe: "5m",
+		Lookback:  120,
+		Tolerance: 0.002,
+	})
+	if err != nil {
+		t.Fatalf("unexpected zero-mode Compute error: %v", err)
+	}
+
+	explicit, err := Compute(candles, Options{
+		Timeframe: "5m",
+		Lookback:  120,
+		Mode:      ModeLegacy,
+		Tolerance: 0.002,
+	})
+	if err != nil {
+		t.Fatalf("unexpected explicit legacy Compute error: %v", err)
+	}
+	if len(explicit.Levels) == 0 {
+		t.Fatal("representative legacy fixture should produce levels")
+	}
+	if !reflect.DeepEqual(implicit, explicit) {
+		t.Fatalf("zero Mode should match explicit ModeLegacy\nimplicit: %+v\nexplicit: %+v", implicit, explicit)
+	}
+}
+
 func TestCompute_LegacyShortInputReturnsEmptyLevels(t *testing.T) {
 	candles := makeFlatCandles(10, 100.0, time.Date(2024, 4, 11, 0, 0, 0, 0, time.UTC))
 	got := computeLegacy(candles, "5m", 50, 0.002)
