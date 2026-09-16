@@ -39,6 +39,19 @@ Run `gofmt -w .` first if the formatting check prints files. CI requires at leas
 
 CI also compares the root module's exported compile-time API with the latest stable release and rejects backward-incompatible changes. Compatible API additions are allowed; behavioral compatibility remains the responsibility of regression and behavior-focused tests.
 
+### Vulnerability Scanning
+
+CI runs `govulncheck` against the root module on pull requests and pushes to `main`. The scanner is pinned to `golang.org/x/vuln/cmd/govulncheck@v1.8.0`, runs with the current stable Go release, and is a non-required status check.
+
+To run the same root scan locally:
+
+```bash
+go install golang.org/x/vuln/cmd/govulncheck@v1.8.0
+govulncheck ./...
+```
+
+The BBGO example is evaluated separately because it has its own large third-party dependency graph. It is not currently configured as a failing vulnerability-scan job; the latest tagged BBGO release still resolves dependencies with reachable `govulncheck` findings, so such a job would remain red without an upstream-compatible upgrade. Re-evaluate BBGO scan automation when its pinned dependency line can clear those findings.
+
 ### Mutation Testing
 
 Mutation testing is a diagnostic maintenance check, not a merge gate. The dedicated workflow runs on the first Monday of each month at 04:23 UTC and on manual dispatch against `dev`, mutating only the root library; examples are excluded by [`.gremlins.yaml`](.gremlins.yaml). GitHub schedules and exposes manual dispatch only after the workflow exists on the default branch (`main`); each run then explicitly checks out `dev`. Gremlins is pinned in the workflow for reproducibility, and no mutation-efficacy threshold is enforced. Surviving mutants are investigation leads, not automatically defects.
