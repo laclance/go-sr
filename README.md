@@ -252,6 +252,7 @@ CI runs on pull requests and pushes to `main` and requires:
 - `golangci-lint run`
 - A high statement-coverage floor with the actual total reported
 - Fuzz smoke tests for aggregation and compute invariants
+- Backward-compatible exported Go API changes against the latest stable release
 
 ## Contributing
 

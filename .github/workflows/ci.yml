@@ -88,6 +88,66 @@ jobs:
       - name: Fuzz compute smoke
         run: go test -run=^$ -fuzz=FuzzComputeInvariants -fuzztime=5s
 
+  api-compatibility:
+    name: API Compatibility
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up current Go
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version: 'stable'
+          cache: true
+
+      - name: Install API compatibility tool
+        run: go install golang.org/x/exp/cmd/apidiff@v0.0.0-20260908205506-85c1c2202aba
+
+      - name: Resolve released API baseline
+        id: baseline
+        run: |
+          module="$(go list -m -f '{{.Path}}')"
+          baseline="$(go list -m -f '{{.Version}}' "${module}@latest")"
+          if [[ -z "${baseline}" || "${baseline}" == *-* ]]; then
+            echo "failed to resolve a stable released API baseline: ${baseline:-<empty>}" >&2
+            exit 1
+          fi
+          baseline_dir="$(go list -m -f '{{.Dir}}' "${module}@${baseline}")"
+          echo "API compatibility baseline: ${baseline}"
+          echo "module=${module}" >> "${GITHUB_OUTPUT}"
+          echo "baseline=${baseline}" >> "${GITHUB_OUTPUT}"
+          echo "baseline_dir=${baseline_dir}" >> "${GITHUB_OUTPUT}"
+
+      - name: Export released API
+        working-directory: ${{ steps.baseline.outputs.baseline_dir }}
+        run: |
+          "$(go env GOPATH)/bin/apidiff" -m -w "${RUNNER_TEMP}/api-baseline.apidiff" "${{ steps.baseline.outputs.module }}"
+
+      - name: Export current API
+        run: |
+          "$(go env GOPATH)/bin/apidiff" -m -w "${RUNNER_TEMP}/api-current.apidiff" "${{ steps.baseline.outputs.module }}"
+
+      - name: Check backward compatibility
+        run: |
+          apidiff="$(go env GOPATH)/bin/apidiff"
+          changes="$(${apidiff} -m "${RUNNER_TEMP}/api-baseline.apidiff" "${RUNNER_TEMP}/api-current.apidiff")"
+          if [[ -n "${changes}" ]]; then
+            printf '%s\n' "${changes}"
+          else
+            echo 'No exported API changes.'
+          fi
+
+          incompatible="$(${apidiff} -m -incompatible "${RUNNER_TEMP}/api-baseline.apidiff" "${RUNNER_TEMP}/api-current.apidiff")"
+          if [[ -n "${incompatible}" ]]; then
+            echo 'Backward-incompatible exported API changes detected:' >&2
+            printf '%s\n' "${incompatible}" >&2
+            exit 1
+          fi
+
+          echo 'Exported Go API is backward compatible with the latest stable release.'
+
   bbgo-example:
     name: BBGO Example Compatibility
     runs-on: ubuntu-latest
