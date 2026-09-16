@@ -37,6 +37,8 @@ go test -run=^$ -fuzz=FuzzComputeInvariants -fuzztime=5s
 
 Run `gofmt -w .` first if the formatting check prints files. CI requires at least 95% statement coverage and reports the actual total. Keep tests focused on meaningful behavior, edge cases, regressions, and invariants rather than coverage alone.
 
+CI also compares the root module's exported compile-time API with the latest stable release and rejects backward-incompatible changes. Compatible API additions are allowed; behavioral compatibility remains the responsibility of regression and behavior-focused tests.
+
 ### Mutation Testing
 
 Mutation testing is a diagnostic maintenance check, not a merge gate. The dedicated workflow runs on the first Monday of each month at 04:23 UTC and on manual dispatch against `dev`, mutating only the root library; examples are excluded by [`.gremlins.yaml`](.gremlins.yaml). GitHub schedules and exposes manual dispatch only after the workflow exists on the default branch (`main`); each run then explicitly checks out `dev`. Gremlins is pinned in the workflow for reproducibility, and no mutation-efficacy threshold is enforced. Surviving mutants are investigation leads, not automatically defects.
