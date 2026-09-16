@@ -1,0 +1,7 @@
+unleash:
+  output-statuses: "lct"
+  threshold:
+    efficacy: 0
+    mutant-coverage: 0
+  exclude-files:
+    - "^examples/"
