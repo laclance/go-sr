@@ -39,7 +39,7 @@ Run `gofmt -w .` first if the formatting check prints files. CI requires at leas
 
 ### Mutation Testing
 
-Mutation testing is a diagnostic maintenance check, not a merge gate. The dedicated workflow runs weekly and on manual dispatch against `dev`, mutating only the root library; examples are excluded by [`.gremlins.yaml`](.gremlins.yaml). Gremlins is pinned in the workflow for reproducibility, and no mutation-efficacy threshold is enforced. Surviving mutants are investigation leads, not automatically defects.
+Mutation testing is a diagnostic maintenance check, not a merge gate. The dedicated workflow runs on the first Monday of each month at 04:23 UTC and on manual dispatch against `dev`, mutating only the root library; examples are excluded by [`.gremlins.yaml`](.gremlins.yaml). GitHub schedules and exposes manual dispatch only after the workflow exists on the default branch (`main`); each run then explicitly checks out `dev`. Gremlins is pinned in the workflow for reproducibility, and no mutation-efficacy threshold is enforced. Surviving mutants are investigation leads, not automatically defects.
 
 To run the same mutation scope locally, install the pinned Gremlins revision and write a machine-readable report:
 
