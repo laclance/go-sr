@@ -75,6 +75,7 @@ Open an issue with a minimal reproduction, Go version, OS, module version or com
 
 ## Pull Requests
 
+- Open pull requests against `dev`; `main` is the protected default/release branch.
 - Use Conventional Commits such as `feat:`, `fix:`, `docs:`, `test:`, `refactor:`, `chore:`, and `ci:`.
 - Keep PRs small and focused.
 - Add regression tests for bug fixes.
