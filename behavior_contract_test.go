@@ -119,11 +119,11 @@ func TestBuildZones_EvenMedianWidthControlsMergeThreshold(t *testing.T) {
 
 func TestComputeATR_MinimumHistoryBoundary(t *testing.T) {
 	start := time.Date(2024, 5, 4, 0, 0, 0, 0, time.UTC)
-	if got := computeATR(makeFlatCandles(rsiPeriod, 100, start), rsiPeriod); got != 0 {
+	if got := computeATR(makeFlatCandles(atrPeriod, 100, start), atrPeriod); got != 0 {
 		t.Fatalf("expected zero ATR with only period candles, got %v", got)
 	}
 
-	got := computeATR(makeFlatCandles(rsiPeriod+1, 100, start), rsiPeriod)
+	got := computeATR(makeFlatCandles(atrPeriod+1, 100, start), atrPeriod)
 	if got <= 0 {
 		t.Fatalf("expected positive ATR with exactly period+1 candles, got %v", got)
 	}

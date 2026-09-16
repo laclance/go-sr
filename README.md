@@ -158,7 +158,7 @@ limit := sr.RequiredKlineLimit("5m", "1h", 50, sr.ModeZones)
 
 `WarmupCandles` and `RequiredKlineLimit` return `0` when `lookback <= 0` because an all-supplied-history calculation has no finite warmup/fetch size. For bounded lookbacks, `RequiredKlineLimit` includes enough slack for fixed-duration UTC target buckets anchored at `1970-01-01T00:00:00Z`, plus one potentially live final candle. Exclude that still-open candle before calling `AggregateCandlesToTimeframe` or `Compute`; both APIs expect closed candles.
 
-## Public API
+## Core API
 
 ```go
 type Mode string
@@ -188,17 +188,18 @@ See the standalone program in [`examples/basic`](examples/basic), runnable packa
 ## Behavioral Contract
 
 - `Compute` is deterministic for the same candle prefix and options.
+- The zero value of `Options.Mode` selects `ModeLegacy`.
 - `Options.Lookback <= 0` uses all supplied candle history in both modes.
 - Unknown modes cause `Compute` to return `EmptyLevels(opts.Timeframe)` plus an error.
 - `WarmupCandles` and `RequiredKlineLimit` require a positive, bounded lookback and return `0` when a finite size cannot be provided, including for non-positive lookbacks and existing invalid-input cases.
 - Zone-mode pivots are confirmation-based; no future candles are read beyond the current prefix.
-- `AggregateCandlesToTimeframe` uses fixed-duration UTC buckets anchored at `1970-01-01T00:00:00Z` and drops leading/trailing partial buckets.
+- `AggregateCandlesToTimeframe` uses fixed-duration UTC buckets anchored at `1970-01-01T00:00:00Z`. Only complete contiguous target buckets are emitted; partial or gapped buckets are dropped.
 - For positive lookbacks, `RequiredKlineLimit` includes enough raw candles to preserve the higher-timeframe warmup after alignment to that bucket grid, plus one potentially live candle for exchange REST responses.
 - Callers must exclude still-open candles before passing data to `AggregateCandlesToTimeframe` or `Compute`.
 - Supported interval strings use `<n><unit>` with `m`, `h`, or `d`; the target interval must be larger than and evenly divisible by the base interval.
 - `NearSupport` / `NearResistance` describe whether the nearest level on each side is within the mode-specific near threshold.
 - In zone mode, the near threshold is `2 ×` the zone half-width; zero-width zones fall back to `0.1%` of the absolute current price.
-- In legacy mode, the near threshold is `Tolerance × close`.
+- In legacy mode, the near threshold is `Tolerance × |close|`.
 
 ## Scope
 
@@ -241,16 +242,18 @@ GO_SR_CHART_MIN_STRENGTH=1
 
 ## Quality Gate
 
-CI runs on pull requests and pushes to `main` and requires:
+CI runs on pull requests and pushes to `main`.
 
-- `gofmt`
-- `go test ./...`
-- `go test -race ./...`
-- `go vet ./...`
-- `staticcheck ./...`
-- `golangci-lint run`
-- A high statement-coverage floor with the actual total reported
-- Fuzz smoke tests for aggregation and compute invariants
+Required status checks on `main` are:
+
+- `Minimum Go Compatibility` — runs the test suite on the minimum Go version declared by `go.mod`
+- `Current Go Quality Gate` — runs `gofmt`, tests, race detection, `go vet`, Staticcheck, golangci-lint, the statement-coverage floor, and fuzz smoke tests
+- `API Compatibility` — rejects backward-incompatible exported Go API changes against the latest stable release
+
+Additional non-required CI checks are:
+
+- `Root Vulnerability Scan` — runs `govulncheck` on the root module with current stable Go
+- `BBGO Example Compatibility` — verifies the root module remains BBGO-free and compiles the isolated BBGO adapter module
 
 ## Contributing
 

@@ -80,6 +80,34 @@ func TestCompute_UnknownModeReturnsError(t *testing.T) {
 	}
 }
 
+func TestCompute_ZeroModeMatchesExplicitLegacy(t *testing.T) {
+	candles := buildSRCategoryCandles()
+	implicit, err := Compute(candles, Options{
+		Timeframe: "5m",
+		Lookback:  120,
+		Tolerance: 0.002,
+	})
+	if err != nil {
+		t.Fatalf("unexpected zero-mode Compute error: %v", err)
+	}
+
+	explicit, err := Compute(candles, Options{
+		Timeframe: "5m",
+		Lookback:  120,
+		Mode:      ModeLegacy,
+		Tolerance: 0.002,
+	})
+	if err != nil {
+		t.Fatalf("unexpected explicit legacy Compute error: %v", err)
+	}
+	if len(explicit.Levels) == 0 {
+		t.Fatal("representative legacy fixture should produce levels")
+	}
+	if !reflect.DeepEqual(implicit, explicit) {
+		t.Fatalf("zero Mode should match explicit ModeLegacy\nimplicit: %+v\nexplicit: %+v", implicit, explicit)
+	}
+}
+
 func TestCompute_LegacyShortInputReturnsEmptyLevels(t *testing.T) {
 	candles := makeFlatCandles(10, 100.0, time.Date(2024, 4, 11, 0, 0, 0, 0, time.UTC))
 	got := computeLegacy(candles, "5m", 50, 0.002)
@@ -97,14 +125,7 @@ func TestCompute_LegacyDefaultToleranceMatchesExplicitFallback(t *testing.T) {
 	}
 }
 
-func TestComputeSRLegacy_InternalFallbackAndWindowEdges(t *testing.T) {
-	candles := buildSRCategoryCandles()
-	implicit := computeSRLegacy(candles, "5m", 120, 0)
-	explicit := computeSRLegacy(candles, "5m", 120, 0.002)
-	if !reflect.DeepEqual(implicit, explicit) {
-		t.Fatalf("expected internal legacy tolerance fallback to match explicit tolerance")
-	}
-
+func TestComputeSRLegacy_WindowEdges(t *testing.T) {
 	fullWindow := computeSRLegacy(makeFlatCandles(20, 100, time.Date(2024, 4, 18, 0, 0, 0, 0, time.UTC)), "5m", 100, 0.002)
 	if fullWindow.Timeframe != "5m" {
 		t.Fatalf("expected timeframe to survive full-window legacy calculation, got %+v", fullWindow)

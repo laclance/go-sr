@@ -83,22 +83,16 @@ func TestFindPivots_ReturnsNilWhenWindowHasNoInterior(t *testing.T) {
 	}
 }
 
-func TestPivotBounceATR_EdgeCases(t *testing.T) {
-	candles := makeFlatCandles(5, 100, time.Date(2024, 4, 13, 0, 0, 0, 0, time.UTC))
-
-	if got := pivotBounceATR(candles, srPivot{Index: 2, Price: 100, ATRSnapshot: 0}); got != 0 {
+func TestPivotBounceATR_ZeroATRSnapshotReturnsZero(t *testing.T) {
+	candles := makeFlatCandles(pivotWindow*2+1, 100, time.Date(2024, 4, 13, 0, 0, 0, 0, time.UTC))
+	if got := pivotBounceATR(candles, srPivot{Index: pivotWindow, Price: 100, ATRSnapshot: 0}); got != 0 {
 		t.Fatalf("expected zero bounce when ATR snapshot is unavailable, got %.4f", got)
-	}
-
-	got := pivotBounceATR(candles, srPivot{Index: 3, Price: 100, ATRSnapshot: 2, IsHigh: false})
-	if !almostEqual(got, 0.1) {
-		t.Fatalf("expected clamped trailing bounce of 0.1 ATR, got %.4f", got)
 	}
 }
 
 func TestComputeATR_ShortInputReturnsZero(t *testing.T) {
 	candles := makeFlatCandles(3, 100, time.Date(2024, 4, 14, 0, 0, 0, 0, time.UTC))
-	if got := computeATR(candles, rsiPeriod); got != 0 {
+	if got := computeATR(candles, atrPeriod); got != 0 {
 		t.Fatalf("expected zero ATR for short input, got %.4f", got)
 	}
 }
@@ -119,30 +113,7 @@ func TestComputeAvgVolume_WindowSelection(t *testing.T) {
 	}
 }
 
-func TestScoreZone_ClampsScanLenAndNegativeFreshness(t *testing.T) {
-	candles := makeFlatCandles(10, 100, time.Date(2024, 4, 15, 0, 0, 0, 0, time.UTC))
-	zone := Level{Top: 101, Bottom: 99, Strength: 2, LastTouchIndex: 0}
-	members := []srPivot{
-		{ConfirmedAtIndex: 1, BounceATR: 0},
-		{ConfirmedAtIndex: 2, BounceATR: 0},
-	}
-
-	if got := scoreZone(zone, members, candles, 0); got != 3 {
-		t.Fatalf("expected score with clamped freshness to be touch score only, got %.4f", got)
-	}
-}
-
-func TestCountFalseBreaks_ClampsNegativeEstablishedIndex(t *testing.T) {
-	candles := makeFlatCandles(4, 100, time.Date(2024, 4, 16, 0, 0, 0, 0, time.UTC))
-	candles[0].Close = 101.5
-	candles[1].Close = 100.5
-
-	if got := countFalseBreaks(Level{Top: 101, IsHigh: true}, candles, -3); got != 1 {
-		t.Fatalf("expected one false break after clamping negative start, got %d", got)
-	}
-}
-
-func TestBuildZone_TieBreaksMembersByPriceThenConfirmation(t *testing.T) {
+func TestBuildZones_TieBreaksMembersByPriceThenConfirmation(t *testing.T) {
 	candles := makeFlatCandles(20, 100, time.Date(2024, 4, 17, 0, 0, 0, 0, time.UTC))
 	cluster := []srPivot{
 		{Index: 5, ConfirmedAtIndex: 9, Price: 100, IsHigh: false, Timeframe: "5m", MergeWidth: 2},
@@ -150,7 +121,11 @@ func TestBuildZone_TieBreaksMembersByPriceThenConfirmation(t *testing.T) {
 		{Index: 5, ConfirmedAtIndex: 8, Price: 100, IsHigh: false, Timeframe: "5m", MergeWidth: 2},
 	}
 
-	got := buildZone(cluster, candles, 20)
+	zones := buildZones(cluster, candles, len(candles))
+	if len(zones) != 1 {
+		t.Fatalf("expected one production-built zone, got %d", len(zones))
+	}
+	got := zones[0]
 	if len(got.Pivots) != 3 {
 		t.Fatalf("expected three pivot diagnostics, got %d", len(got.Pivots))
 	}

@@ -35,4 +35,4 @@ Use Conventional Commits:
 - Keep PRs small and focused.
 - Explain what changed and why.
 - List the tests and checks run.
-- Do not merge without maintainer approval.
+- Follow the review policy in [`CONTRIBUTING.md`](CONTRIBUTING.md).

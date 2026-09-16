@@ -52,18 +52,6 @@ func buildPriceSortedZone(cluster []srPivot, candles []Candle, scanLen int, widt
 	return buildZoneFromMembers(cluster, candles, scanLen, center, halfWidth)
 }
 
-func buildZone(cluster []srPivot, candles []Candle, scanLen int) Level {
-	members := append([]srPivot(nil), cluster...)
-	sortZoneMembers(members)
-	return buildZoneFromMembers(
-		members,
-		candles,
-		scanLen,
-		medianPivotPrice(members),
-		medianPivotWidth(members)/2,
-	)
-}
-
 func sortZoneMembers(members []srPivot) {
 	sort.Slice(members, func(i, j int) bool {
 		if members[i].Index != members[j].Index {
@@ -189,22 +177,6 @@ func preferZoneForDedup(candidate, current Level) bool {
 		return candidate.Price < current.Price
 	}
 	return compareIntSlices(candidate.SourcePivotIndexes, current.SourcePivotIndexes) < 0
-}
-
-func medianPivotPrice(pivots []srPivot) float64 {
-	values := make([]float64, 0, len(pivots))
-	for _, p := range pivots {
-		values = append(values, p.Price)
-	}
-	return medianFloat64(values)
-}
-
-func medianPivotWidth(pivots []srPivot) float64 {
-	values := make([]float64, 0, len(pivots))
-	for _, p := range pivots {
-		values = append(values, p.MergeWidth)
-	}
-	return medianFloat64(values)
 }
 
 func medianPivotBounceATR(pivots []srPivot) float64 {
