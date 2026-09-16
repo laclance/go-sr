@@ -26,7 +26,7 @@ func findPivots(candles []Candle, timeframe string, lookback int, isHigh bool) [
 
 		confirmedAtIndex := i + pivotWindow
 		snapshotCandles := candles[:confirmedAtIndex+1]
-		atrSnapshot := computeATR(snapshotCandles, rsiPeriod)
+		atrSnapshot := computeATR(snapshotCandles, atrPeriod)
 		avgVolumeSnapshot := computeAvgVolume(snapshotCandles, avgVolPeriod, len(snapshotCandles))
 		price := candles[i].Low
 		if isHigh {

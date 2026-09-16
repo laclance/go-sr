@@ -188,6 +188,7 @@ See the standalone program in [`examples/basic`](examples/basic), runnable packa
 ## Behavioral Contract
 
 - `Compute` is deterministic for the same candle prefix and options.
+- The zero value of `Options.Mode` selects `ModeLegacy`.
 - `Options.Lookback <= 0` uses all supplied candle history in both modes.
 - Unknown modes cause `Compute` to return `EmptyLevels(opts.Timeframe)` plus an error.
 - `WarmupCandles` and `RequiredKlineLimit` require a positive, bounded lookback and return `0` when a finite size cannot be provided, including for non-positive lookbacks and existing invalid-input cases.

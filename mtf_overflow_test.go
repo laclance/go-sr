@@ -16,7 +16,7 @@ func TestWarmupCandlesOverflow(t *testing.T) {
 }
 
 func TestWarmupCandlesBoundary(t *testing.T) {
-	zonePadding := max(pivotWindow, max(rsiPeriod, avgVolPeriod)-pivotWindow)
+	zonePadding := max(pivotWindow, max(atrPeriod, avgVolPeriod)-pivotWindow)
 	cases := []struct {
 		mode    Mode
 		padding int
@@ -36,7 +36,7 @@ func TestWarmupCandlesBoundary(t *testing.T) {
 }
 
 func TestRequiredKlineLimitBoundary(t *testing.T) {
-	zonePadding := max(pivotWindow, max(rsiPeriod, avgVolPeriod)-pivotWindow)
+	zonePadding := max(pivotWindow, max(atrPeriod, avgVolPeriod)-pivotWindow)
 	maxWarmup := math.MaxInt/2 - 1
 	lookback := maxWarmup - zonePadding
 	want := (maxWarmup + 1) * 2
@@ -52,7 +52,7 @@ func TestRequiredKlineLimitBoundary(t *testing.T) {
 }
 
 func TestRequiredKlineLimitRejectsMaxIntWarmup(t *testing.T) {
-	zonePadding := max(pivotWindow, max(rsiPeriod, avgVolPeriod)-pivotWindow)
+	zonePadding := max(pivotWindow, max(atrPeriod, avgVolPeriod)-pivotWindow)
 	lookback := math.MaxInt - zonePadding
 	if got := RequiredKlineLimit("1m", "2m", lookback, ModeZones); got != 0 {
 		t.Fatalf("RequiredKlineLimit with MaxInt warmup = %d, want 0", got)

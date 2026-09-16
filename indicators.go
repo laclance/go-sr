@@ -3,7 +3,7 @@ package sr
 import "math"
 
 const (
-	rsiPeriod    = 14
+	atrPeriod    = 14
 	avgVolPeriod = 20
 )
 

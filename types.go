@@ -115,7 +115,8 @@ type Options struct {
 	// Lookback limits the candle history used for level detection. Values <= 0
 	// use all supplied candle history.
 	Lookback int
-	Mode     Mode
+	// Mode selects the algorithm. The zero value selects ModeLegacy.
+	Mode Mode
 	// Tolerance applies only to ModeLegacy. When Tolerance <= 0, legacy mode
 	// uses the default fallback of 0.002.
 	Tolerance float64

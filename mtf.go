@@ -27,7 +27,7 @@ func warmupPaddingForMode(mode Mode) int {
 		return legacyPivotWindow
 	}
 
-	indicatorHistory := max(rsiPeriod, avgVolPeriod) - pivotWindow
+	indicatorHistory := max(atrPeriod, avgVolPeriod) - pivotWindow
 	return max(pivotWindow, indicatorHistory)
 }
 
