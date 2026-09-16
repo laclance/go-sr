@@ -35,7 +35,7 @@ func FuzzAggregateCandlesToTimeframe(f *testing.F) {
 	f.Fuzz(func(t *testing.T, countSeed, pairSeed, alignmentSeed, shapeSeed, gapSeed int) {
 		pair := fuzzIntervalPairs[fuzzBoundedInt(pairSeed, len(fuzzIntervalPairs))]
 		candles := fuzzAggregateCandles(fuzzBoundedInt(countSeed, 257), pair, alignmentSeed, shapeSeed, gapSeed)
-		before := append([]Candle(nil), candles...)
+		before := append(candles[:0:0], candles...)
 		got := AggregateCandlesToTimeframe(candles, pair.from, pair.to)
 
 		if !reflect.DeepEqual(got, AggregateCandlesToTimeframe(candles, pair.from, pair.to)) {
@@ -86,7 +86,7 @@ func FuzzComputeInvariants(f *testing.F) {
 		pattern := fuzzBoundedInt(patternSeed, 11)
 		mode := []Mode{"", ModeLegacy, ModeZones}[fuzzBoundedInt(modeSeed, 3)]
 		candles := fuzzComputePatternCandles(count, pattern, phaseSeed)
-		before := append([]Candle(nil), candles...)
+		before := append(candles[:0:0], candles...)
 		opts := Options{
 			Timeframe:   "5m",
 			Lookback:    fuzzComputeLookback(lookbackSeed, count),
