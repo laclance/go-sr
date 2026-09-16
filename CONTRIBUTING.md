@@ -37,6 +37,17 @@ go test -run=^$ -fuzz=FuzzComputeInvariants -fuzztime=5s
 
 Run `gofmt -w .` first if the formatting check prints files. CI requires at least 95% statement coverage and reports the actual total. Keep tests focused on meaningful behavior, edge cases, regressions, and invariants rather than coverage alone.
 
+### Mutation Testing
+
+Mutation testing is a diagnostic maintenance check, not a merge gate. The dedicated workflow runs on the first Monday of each month at 04:23 UTC and on manual dispatch against `dev`, mutating only the root library; examples are excluded by [`.gremlins.yaml`](.gremlins.yaml). GitHub schedules and exposes manual dispatch only after the workflow exists on the default branch (`main`); each run then explicitly checks out `dev`. Gremlins is pinned in the workflow for reproducibility, and no mutation-efficacy threshold is enforced. Surviving mutants are investigation leads, not automatically defects.
+
+To run the same mutation scope locally, install the pinned Gremlins revision and write a machine-readable report:
+
+```bash
+go install github.com/go-gremlins/gremlins/cmd/gremlins@b48a4aad17eff33dc7262e0d1487b1a4d6eec322
+gremlins unleash --output=mutation-report.json
+```
+
 ## Issues
 
 Open an issue with a minimal reproduction, Go version, OS, module version or commit, expected behavior, and actual behavior. Include sample candles or input when relevant, especially for determinism or lookahead-bias concerns.
