@@ -48,6 +48,12 @@ go install github.com/go-gremlins/gremlins/cmd/gremlins@b48a4aad17eff33dc7262e0d
 gremlins unleash --output=mutation-report.json
 ```
 
+## Releases
+
+Release Please runs after pushes to `main`. After each successful Release Please workflow run, the workflow merges the current `main` history back into `dev` and pushes the resulting merge commit. This keeps `dev` current after both `dev`-to-`main` promotion merges and Release Please release merges. The sync uses a normal Git merge: if `main` and `dev` conflict, the workflow fails and the conflict must be resolved manually rather than force-updating either branch.
+
+Only configured user-facing commit types drive a new library release. Test, CI, documentation, and maintenance-only changes may reach `main` without creating a new version; the branch sync still runs so Git ancestry remains aligned.
+
 ## Issues
 
 Open an issue with a minimal reproduction, Go version, OS, module version or commit, expected behavior, and actual behavior. Include sample candles or input when relevant, especially for determinism or lookahead-bias concerns.
