@@ -128,3 +128,109 @@ func TestComputeATR_MinimumHistoryBoundary(t *testing.T) {
 		t.Fatalf("expected positive ATR with exactly period+1 candles, got %v", got)
 	}
 }
+
+func TestCandleDirection_DojiIsNeitherBullishNorBearish(t *testing.T) {
+	doji := Candle{Open: 100, Close: 100}
+	if doji.IsBullish() || doji.IsBearish() {
+		t.Fatalf("doji should be neither bullish nor bearish: %+v", doji)
+	}
+}
+
+func TestCompute_PivotPlateauEqualityDoesNotCreatePivot(t *testing.T) {
+	tests := []struct {
+		name  string
+		apply func([]Candle)
+	}{
+		{
+			name: "equal highs",
+			apply: func(candles []Candle) {
+				candles[8].High = 110
+				candles[9].High = 110
+			},
+		},
+		{
+			name: "equal lows",
+			apply: func(candles []Candle) {
+				candles[8].Low = 90
+				candles[9].Low = 90
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			for _, mode := range []Mode{ModeLegacy, ModeZones} {
+				t.Run(string(mode), func(t *testing.T) {
+					candles := makeFlatCandles(20, 100, time.Date(2024, 5, 5, 0, 0, 0, 0, time.UTC))
+					tc.apply(candles)
+
+					got, err := Compute(candles, Options{
+						Timeframe:   "5m",
+						Lookback:    0,
+						Mode:        mode,
+						Tolerance:   0.002,
+						MinStrength: 1,
+					})
+					if err != nil {
+						t.Fatalf("unexpected Compute error: %v", err)
+					}
+					if len(got.RawZones) != 0 {
+						t.Fatalf("equal-price plateau should not produce a pivot in %s mode, got %+v", mode, got.RawZones)
+					}
+				})
+			}
+		})
+	}
+}
+
+func TestCountFalseBreaks_StartsAfterZoneEstablishment(t *testing.T) {
+	candles := makeFlatCandles(6, 100, time.Date(2024, 5, 6, 0, 0, 0, 0, time.UTC))
+	candles[2].Close = 102
+	candles[3].Close = 100
+
+	if got := countFalseBreaks(Level{Top: 101, IsHigh: true}, candles, 2); got != 0 {
+		t.Fatalf("breakout on establishment bar should not count as a false break, got %d", got)
+	}
+}
+
+func TestCountFalseBreaks_ExactBoundaryIsInsideAndCountsAsReentry(t *testing.T) {
+	tests := []struct {
+		name          string
+		zone          Level
+		boundaryTouch []float64
+		reentryTouch  []float64
+	}{
+		{
+			name:          "resistance",
+			zone:          Level{Top: 101, IsHigh: true},
+			boundaryTouch: []float64{100, 101, 100, 100, 100, 100},
+			reentryTouch:  []float64{100, 102, 101, 102, 102, 102},
+		},
+		{
+			name:          "support",
+			zone:          Level{Bottom: 99, IsHigh: false},
+			boundaryTouch: []float64{100, 99, 100, 100, 100, 100},
+			reentryTouch:  []float64{100, 98, 99, 98, 98, 98},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			atBoundary := makeFlatCandles(len(tc.boundaryTouch), 100, time.Date(2024, 5, 7, 0, 0, 0, 0, time.UTC))
+			for i, closePrice := range tc.boundaryTouch {
+				atBoundary[i].Close = closePrice
+			}
+			if got := countFalseBreaks(tc.zone, atBoundary, 0); got != 0 {
+				t.Fatalf("exact boundary touch should remain inside the zone, got %d false breaks", got)
+			}
+
+			reentered := makeFlatCandles(len(tc.reentryTouch), 100, time.Date(2024, 5, 8, 0, 0, 0, 0, time.UTC))
+			for i, closePrice := range tc.reentryTouch {
+				reentered[i].Close = closePrice
+			}
+			if got := countFalseBreaks(tc.zone, reentered, 0); got != 1 {
+				t.Fatalf("exact boundary touch should count as reentry after breakout, got %d false breaks", got)
+			}
+		})
+	}
+}
