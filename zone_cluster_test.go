@@ -3,6 +3,7 @@ package sr
 import (
 	"math"
 	"reflect"
+	"sort"
 	"testing"
 )
 
@@ -65,8 +66,8 @@ func referenceClusterPriceSortedPivots(sorted []srPivot) [][]srPivot {
 	clusters := [][]srPivot{{sorted[0]}}
 	for _, p := range sorted[1:] {
 		last := &clusters[len(clusters)-1]
-		clusterMedianPrice := medianPivotPrice(*last)
-		clusterMedianWidth := medianPivotWidth(*last)
+		clusterMedianPrice := referenceMedianPivotPrice(*last)
+		clusterMedianWidth := referenceMedianPivotWidth(*last)
 		threshold := math.Max(clusterMedianWidth, p.MergeWidth)
 		if math.Abs(p.Price-clusterMedianPrice) <= threshold {
 			*last = append(*last, p)
@@ -75,6 +76,35 @@ func referenceClusterPriceSortedPivots(sorted []srPivot) [][]srPivot {
 		clusters = append(clusters, []srPivot{p})
 	}
 	return clusters
+}
+
+func referenceMedianPivotPrice(pivots []srPivot) float64 {
+	values := make([]float64, len(pivots))
+	for i, p := range pivots {
+		values[i] = p.Price
+	}
+	return referenceMedianFloat64(values)
+}
+
+func referenceMedianPivotWidth(pivots []srPivot) float64 {
+	values := make([]float64, len(pivots))
+	for i, p := range pivots {
+		values[i] = p.MergeWidth
+	}
+	return referenceMedianFloat64(values)
+}
+
+func referenceMedianFloat64(values []float64) float64 {
+	if len(values) == 0 {
+		return 0
+	}
+	sorted := append([]float64(nil), values...)
+	sort.Float64s(sorted)
+	mid := len(sorted) / 2
+	if len(sorted)%2 == 1 {
+		return sorted[mid]
+	}
+	return (sorted[mid-1] + sorted[mid]) / 2
 }
 
 func testPriceSortedPivotsOneCluster(n int) []srPivot {

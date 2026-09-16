@@ -125,14 +125,7 @@ func TestCompute_LegacyDefaultToleranceMatchesExplicitFallback(t *testing.T) {
 	}
 }
 
-func TestComputeSRLegacy_InternalFallbackAndWindowEdges(t *testing.T) {
-	candles := buildSRCategoryCandles()
-	implicit := computeSRLegacy(candles, "5m", 120, 0)
-	explicit := computeSRLegacy(candles, "5m", 120, 0.002)
-	if !reflect.DeepEqual(implicit, explicit) {
-		t.Fatalf("expected internal legacy tolerance fallback to match explicit tolerance")
-	}
-
+func TestComputeSRLegacy_WindowEdges(t *testing.T) {
 	fullWindow := computeSRLegacy(makeFlatCandles(20, 100, time.Date(2024, 4, 18, 0, 0, 0, 0, time.UTC)), "5m", 100, 0.002)
 	if fullWindow.Timeframe != "5m" {
 		t.Fatalf("expected timeframe to survive full-window legacy calculation, got %+v", fullWindow)

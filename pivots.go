@@ -92,9 +92,6 @@ func pivotBounceATR(candles []Candle, p srPivot) float64 {
 
 	best := 0.0
 	end := p.Index + pivotWindow
-	if end >= len(candles) {
-		end = len(candles) - 1
-	}
 	for j := p.Index + 1; j <= end; j++ {
 		if p.IsHigh {
 			if move := p.Price - candles[j].Low; move > best {

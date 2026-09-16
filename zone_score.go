@@ -1,10 +1,6 @@
 package sr
 
 func scoreZone(zone Level, members []srPivot, candles []Candle, scanLen int) float64 {
-	if scanLen < 1 {
-		scanLen = 1
-	}
-
 	touchScore := float64(zone.Strength) * 1.5
 	bounceScore := medianPivotBounceATR(members) * 2.0
 
@@ -28,9 +24,6 @@ func scoreZone(zone Level, members []srPivot, candles []Candle, scanLen int) flo
 // after the zone's current membership could have existed.
 func countFalseBreaks(zone Level, candles []Candle, zoneEstablishedAt int) int {
 	start := zoneEstablishedAt + 1
-	if start < 0 {
-		start = 0
-	}
 	if start >= len(candles) {
 		return 0
 	}
