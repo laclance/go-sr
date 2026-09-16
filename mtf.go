@@ -75,7 +75,8 @@ func RequiredKlineLimit(baseInterval, targetInterval string, lookback int, mode 
 
 // AggregateCandlesToTimeframe rolls a closed-candle slice into a higher
 // timeframe using fixed-duration UTC buckets anchored at 1970-01-01T00:00:00Z.
-// Any leading or trailing partial bucket is dropped.
+// Only complete contiguous target buckets are emitted; partial or gapped
+// buckets are dropped.
 func AggregateCandlesToTimeframe(candles []Candle, fromInterval, toInterval string) []Candle {
 	fromDur := intervalDuration(fromInterval)
 	toDur := intervalDuration(toInterval)

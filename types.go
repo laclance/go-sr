@@ -16,22 +16,27 @@ type Candle struct {
 	Volume    float64
 }
 
+// Body returns the absolute candle body size.
 func (c Candle) Body() float64 {
 	return math.Abs(c.Close - c.Open)
 }
 
+// Range returns High - Low.
 func (c Candle) Range() float64 {
 	return c.High - c.Low
 }
 
+// IsBullish reports whether Close is greater than Open.
 func (c Candle) IsBullish() bool {
 	return c.Close > c.Open
 }
 
+// IsBearish reports whether Close is less than Open.
 func (c Candle) IsBearish() bool {
 	return c.Close < c.Open
 }
 
+// UpperWick returns the distance from the candle body top to High.
 func (c Candle) UpperWick() float64 {
 	top := c.Close
 	if c.Open > c.Close {
@@ -40,6 +45,7 @@ func (c Candle) UpperWick() float64 {
 	return c.High - top
 }
 
+// LowerWick returns the distance from Low to the candle body bottom.
 func (c Candle) LowerWick() float64 {
 	bottom := c.Open
 	if c.Close < c.Open {
@@ -48,6 +54,7 @@ func (c Candle) LowerWick() float64 {
 	return bottom - c.Low
 }
 
+// MidPoint returns the midpoint between High and Low.
 func (c Candle) MidPoint() float64 {
 	return (c.High + c.Low) / 2
 }
@@ -69,7 +76,7 @@ type PivotInfo struct {
 	BounceATR         float64   `json:"bounce_atr"`
 }
 
-// Level represents a support or resistance zone built from clustered swing pivots.
+// Level represents a support or resistance level, including zone geometry when applicable.
 type Level struct {
 	Price              float64
 	Top                float64
